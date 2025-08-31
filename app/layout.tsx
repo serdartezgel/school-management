@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 
-import "./globals.css";
-import Navbar from "@/components/navigation/navbar";
 import { ThemeProvider } from "@/context/ThemeProvider";
+
+import "./globals.css";
 
 const inter = localFont({
   src: "./fonts/InterVF.ttf",
@@ -12,7 +12,7 @@ const inter = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "School Management System",
+  title: "SilverOak Academy",
   description:
     "Complete school management solution for administrators, teachers, students, and parents",
   keywords: ["school", "management", "education", "students", "teachers"],
@@ -27,7 +27,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.className} antialiased`}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-          <Navbar />
           {children}
         </ThemeProvider>
       </body>
