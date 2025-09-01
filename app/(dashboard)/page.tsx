@@ -1,3 +1,4 @@
+import AnnouncementsCard from "@/components/cards/AnnouncementsCard";
 import StatCard from "@/components/cards/StatCard";
 import AttendanceChart from "@/components/charts/AttendanceChart";
 import CountChart from "@/components/charts/CountChart";
@@ -34,7 +35,9 @@ const Home = () => {
 
       <div className="flex w-full flex-col gap-8 lg:w-1/3">
         <section>EventCalendar</section>
-        <section>Announcement</section>
+        <section>
+          <AnnouncementsCard />
+        </section>
       </div>
     </div>
   );
