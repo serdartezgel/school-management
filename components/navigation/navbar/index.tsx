@@ -33,11 +33,11 @@ const Navbar = () => {
           className="bg-background dark:bg-input/30 flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image
-            src="/images/message.svg"
+            src="/images/message.png"
             alt="Message"
-            width={24}
-            height={24}
-            className="object-contain pt-1 dark:invert-100"
+            width={20}
+            height={20}
+            className="object-contain dark:invert-100"
           />
         </Link>
         <Link
@@ -45,11 +45,11 @@ const Navbar = () => {
           className="bg-background dark:bg-input/30 flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image
-            src="/images/announcement.svg"
+            src="/images/announcement.png"
             alt="Announcement"
-            width={24}
-            height={24}
-            className="object-contain px-0.5 dark:invert-100"
+            width={20}
+            height={20}
+            className="object-contain dark:invert-100"
           />
         </Link>
         <Theme />

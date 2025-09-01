@@ -63,6 +63,7 @@ const LeftSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
                           alt={item.label}
                           width={20}
                           height={20}
+                          className="dark:invert-100"
                         />
                         <span>{item.label}</span>
                       </Link>

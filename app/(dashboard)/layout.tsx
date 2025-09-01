@@ -5,11 +5,11 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 const DashboardLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
-      <main className="flex h-screen">
+      <main className="flex h-screen w-full">
         <Navbar />
         <LeftSidebar />
 
-        {children}
+        <div className="w-full">{children}</div>
       </main>
     </SidebarProvider>
   );
