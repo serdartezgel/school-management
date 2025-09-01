@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import AnnouncementCard from "./AnnouncementCard";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
 const data = [
@@ -48,19 +49,7 @@ const AnnouncementsCard = () => {
       </CardHeader>
       <CardContent className="flex flex-col gap-4 px-0">
         {data.map((item) => (
-          <Card key={item.title} className="bg-sidebar rounded-md p-4">
-            <CardHeader className="px-0">
-              <CardTitle className="flex items-center justify-between font-medium">
-                <span>{item.title}</span>
-                <span className="bg-background rounded-md px-1 py-1 text-xs text-gray-500 dark:text-gray-400">
-                  {new Intl.DateTimeFormat("en-US").format(item.date)}
-                </span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="px-0 text-sm text-zinc-600 dark:text-zinc-400">
-              {item.description}
-            </CardContent>
-          </Card>
+          <AnnouncementCard key={item.title} data={item} />
         ))}
       </CardContent>
     </Card>
