@@ -73,8 +73,6 @@ const EventsCard = () => {
       event.startTime.toLocaleDateString() === date?.toLocaleDateString(),
   );
 
-  console.log(events);
-
   return (
     <>
       <Calendar

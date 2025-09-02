@@ -4,8 +4,11 @@ import StatCard from "@/components/cards/StatCard";
 import AttendanceChart from "@/components/charts/AttendanceChart";
 import CountChart from "@/components/charts/CountChart";
 import GradeChart from "@/components/charts/GradeChart";
+import dbConnect from "@/lib/prisma";
 
-const Home = () => {
+const Home = async () => {
+  await dbConnect();
+
   return (
     <div className="mt-16 flex flex-col gap-4 p-4 lg:flex-row">
       <div className="flex w-full flex-col gap-8 lg:w-2/3">
