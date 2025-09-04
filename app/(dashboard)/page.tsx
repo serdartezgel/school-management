@@ -1,13 +1,14 @@
+import { auth } from "@/auth";
 import AnnouncementsCard from "@/components/cards/AnnouncementsCard";
 import EventsCard from "@/components/cards/EventsCard";
 import StatCard from "@/components/cards/StatCard";
 import AttendanceChart from "@/components/charts/AttendanceChart";
 import CountChart from "@/components/charts/CountChart";
 import GradeChart from "@/components/charts/GradeChart";
-import dbConnect from "@/lib/prisma";
 
 const Home = async () => {
-  await dbConnect();
+  const session = await auth();
+  console.log(session);
 
   return (
     <div className="mt-16 flex flex-col gap-4 p-4 lg:flex-row">

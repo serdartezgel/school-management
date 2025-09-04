@@ -17,7 +17,6 @@ const Navbar = () => {
           alt="School Logo"
           width={40}
           height={40}
-          quality={100}
         />
 
         <span className="hidden font-bold lg:block">SilverOak Academy</span>

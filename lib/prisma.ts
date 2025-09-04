@@ -17,10 +17,10 @@ declare global {
   var prisma: PrismaCache;
 }
 
-let cached = global.prisma;
+let cached = globalThis.prisma;
 
 if (!cached) {
-  cached = global.prisma = { client: null, promise: null };
+  cached = globalThis.prisma = { client: null, promise: null };
 }
 
 const dbConnect = async (): Promise<PrismaClient> => {
@@ -51,14 +51,5 @@ const dbConnect = async (): Promise<PrismaClient> => {
   cached.client = await cached.promise;
   return cached.client;
 };
-
-if (process.env.NODE_ENV === "production") {
-  process.on("beforeExit", async () => {
-    if (cached?.client) {
-      await cached.client.$disconnect();
-      logger.info("Disconnected from PostgreSQL");
-    }
-  });
-}
 
 export default dbConnect;
