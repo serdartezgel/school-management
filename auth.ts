@@ -1,10 +1,31 @@
 import bcrypt from "bcryptjs";
-import NextAuth from "next-auth";
+import NextAuth, { DefaultSession } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 import dbConnect from "./lib/prisma";
 import { SignInSchema } from "./lib/validations";
+import { Role } from "./prisma/client";
 
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: string;
+      role: Role;
+    } & DefaultSession["user"];
+  }
+
+  interface User {
+    id: string;
+    role: Role;
+  }
+}
+
+declare module "next-auth" {
+  interface JWT {
+    id: string;
+    role: Role;
+  }
+}
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Credentials({
@@ -50,7 +71,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.sub as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as Role;
       }
       return session;
     },
