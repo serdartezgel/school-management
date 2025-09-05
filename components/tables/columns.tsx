@@ -4,6 +4,7 @@ import { ColumnDef, CoreRow } from "@tanstack/react-table";
 import { ArrowUpDown, MoreHorizontal } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { ReadonlyURLSearchParams } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -14,16 +15,21 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { formUrlQuery } from "@/lib/url";
 
-export const getTeacherColumns = (role: string): ColumnDef<TeacherDoc>[] => [
+export const getTeacherColumns = (
+  role: string,
+  searchParams: ReadonlyURLSearchParams,
+): ColumnDef<TeacherDoc>[] => [
   {
-    accessorKey: "image",
+    accessorFn: (row) => row.user.image,
+    id: "image",
     header: "Image",
     cell: ({ row }) => (
       <div className="flex items-center justify-center">
         <Image
-          src={row.original.image || "/images/noAvatar.png"}
-          alt={row.original.name}
+          src={row.original.user.image || "/images/noAvatar.png"}
+          alt={row.original.user.name || ""}
           width={32}
           height={32}
           className="rounded-full object-contain"
@@ -32,21 +38,30 @@ export const getTeacherColumns = (role: string): ColumnDef<TeacherDoc>[] => [
     ),
   },
   {
-    accessorKey: "name",
-    header: ({ column }) => {
+    accessorFn: (row) => row.user.name,
+    id: "name",
+    header: () => {
+      const newUrl = formUrlQuery({
+        params: searchParams.toString(),
+        key: "sort",
+        value: searchParams.get("sort") === "desc" ? "asc" : "desc",
+      });
       return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="w-full cursor-pointer !pl-0"
-        >
-          Name
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
+        <Link href={newUrl}>
+          <Button
+            variant={"ghost"}
+            className="w-full cursor-pointer justify-between !pl-0"
+          >
+            Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
       );
     },
     cell: ({ row }) => (
-      <Link href={`/teachers/${row.original.userId}`}>{row.original.name}</Link>
+      <Link href={`/teachers/${row.original.userId}`}>
+        {row.original.user.name}
+      </Link>
     ),
   },
   {
@@ -54,23 +69,12 @@ export const getTeacherColumns = (role: string): ColumnDef<TeacherDoc>[] => [
     header: "Teacher ID",
   },
   {
-    accessorKey: "email",
+    accessorKey: "user.email",
     header: "Email",
   },
   {
     accessorKey: "department",
-    header: ({ column }) => {
-      return (
-        <Button
-          variant="ghost"
-          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
-          className="w-full cursor-pointer !pl-0"
-        >
-          Department
-          <ArrowUpDown className="ml-2 h-4 w-4" />
-        </Button>
-      );
-    },
+    header: "Department",
   },
   {
     accessorKey: "subjects",
@@ -83,11 +87,11 @@ export const getTeacherColumns = (role: string): ColumnDef<TeacherDoc>[] => [
   ...(role === "ADMIN" || role === "TEACHER"
     ? [
         {
-          accessorKey: "phone",
+          accessorKey: "user.phone",
           header: "Phone",
         },
         {
-          accessorKey: "address",
+          accessorKey: "user.address",
           header: "Address",
         },
       ]

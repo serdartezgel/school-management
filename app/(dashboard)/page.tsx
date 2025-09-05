@@ -1,3 +1,5 @@
+import { redirect } from "next/navigation";
+
 import { auth } from "@/auth";
 import AnnouncementsCard from "@/components/cards/AnnouncementsCard";
 import EventsCard from "@/components/cards/EventsCard";
@@ -8,7 +10,7 @@ import GradeChart from "@/components/charts/GradeChart";
 
 const Home = async () => {
   const session = await auth();
-  console.log(session);
+  if (!session) redirect("/sign-in");
 
   return (
     <div className="mt-16 flex flex-col gap-4 p-4 lg:flex-row">

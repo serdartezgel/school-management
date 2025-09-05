@@ -13,3 +13,11 @@ export const SignInSchema = z.object({
     .min(6, { message: "Password must be at least 6 characters long." })
     .max(100, { message: "Password cannot exceed 100 characters." }),
 });
+
+export const PaginatedSearchParamsSchema = z.object({
+  page: z.number().int().min(0, "Page must be at least 0").default(0),
+  pageSize: z.number().int().min(1, "Page size must be at least 1").default(10),
+  query: z.string().optional(),
+  filter: z.string().optional(),
+  sort: z.string().optional(),
+});

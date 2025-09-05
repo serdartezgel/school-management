@@ -1,12 +1,14 @@
 "use client";
 
-import { Table } from "@tanstack/react-table";
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+
+import { formUrlQuery, removeKeysFromUrlQuery } from "@/lib/url";
 
 import { Button } from "../ui/button";
 import {
@@ -17,25 +19,86 @@ import {
   SelectValue,
 } from "../ui/select";
 
-interface DataTablePaginationProps<TData> {
-  table: Table<TData>;
+interface Props {
+  isNext: boolean;
+  totalItems: number;
 }
 
-export function DataTablePagination<TData>({
-  table,
-}: DataTablePaginationProps<TData>) {
+const Pagination = ({ isNext, totalItems }: Props) => {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const page = searchParams.get("page") || 1;
+  const pageSize = searchParams.get("pageSize") || 10;
+
+  const handleNavigation = (type: "prev" | "next") => {
+    const nextPageNumber =
+      type === "prev" ? Number(page) - 1 : Number(page) + 1;
+
+    const newUrl = formUrlQuery({
+      params: searchParams.toString(),
+      key: "page",
+      value: nextPageNumber.toString(),
+    });
+
+    router.push(newUrl);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    const cleanedQuery = removeKeysFromUrlQuery({
+      params: searchParams.toString(),
+      keysToRemove: ["page"],
+    });
+
+    const query = cleanedQuery.split("?")[1] ?? "";
+
+    const newQuery = formUrlQuery({
+      params: query,
+      key: "pageSize",
+      value: size.toString(),
+    });
+
+    router.push(newQuery);
+  };
+
+  const goToFirstPage = () => {
+    const newUrl = removeKeysFromUrlQuery({
+      params: searchParams.toString(),
+      keysToRemove: ["page"],
+    });
+
+    router.push(newUrl);
+  };
+
+  const goToLastPage = () => {
+    const lastPage = Math.ceil(totalItems / Number(pageSize));
+
+    const cleanedQuery = removeKeysFromUrlQuery({
+      params: searchParams.toString(),
+      keysToRemove: ["page"],
+    });
+
+    const newQuery = formUrlQuery({
+      params: cleanedQuery.split("?")[1] ?? "",
+      key: "page",
+      value: lastPage.toString(),
+    });
+
+    router.push(newQuery);
+  };
+
   return (
     <div className="flex w-full items-center justify-between px-2">
       <div className="flex items-center space-x-2">
         <p className="text-sm font-medium">Rows per page</p>
         <Select
-          value={`${table.getState().pagination.pageSize}`}
+          value={pageSize.toString()}
           onValueChange={(value) => {
-            table.setPageSize(Number(value));
+            handlePageSizeChange(Number(value));
           }}
         >
           <SelectTrigger className="h-8 w-[70px]">
-            <SelectValue placeholder={table.getState().pagination.pageSize} />
+            <SelectValue placeholder={pageSize.toString()} />
           </SelectTrigger>
           <SelectContent side="top">
             {[5, 10, 25, 50, 100].map((pageSize) => (
@@ -46,18 +109,18 @@ export function DataTablePagination<TData>({
           </SelectContent>
         </Select>
       </div>
+
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
+          Page {page} of {Math.ceil(totalItems / Number(pageSize))}
         </div>
         <div className="flex items-center space-x-2">
           <Button
             variant="outline"
             size="icon"
             className="hidden size-8 lg:flex"
-            onClick={() => table.setPageIndex(0)}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => goToFirstPage()}
+            disabled={Number(page) === 1}
           >
             <span className="sr-only">Go to first page</span>
             <ChevronsLeft />
@@ -66,8 +129,8 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="size-8"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
+            onClick={() => handleNavigation("prev")}
+            disabled={Number(page) === 1}
           >
             <span className="sr-only">Go to previous page</span>
             <ChevronLeft />
@@ -76,8 +139,8 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="size-8"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
+            onClick={() => handleNavigation("next")}
+            disabled={!isNext}
           >
             <span className="sr-only">Go to next page</span>
             <ChevronRight />
@@ -86,8 +149,8 @@ export function DataTablePagination<TData>({
             variant="outline"
             size="icon"
             className="hidden size-8 lg:flex"
-            onClick={() => table.setPageIndex(table.getPageCount() - 1)}
-            disabled={!table.getCanNextPage()}
+            onClick={() => goToLastPage()}
+            disabled={Number(page) === Math.ceil(totalItems / Number(pageSize))}
           >
             <span className="sr-only">Go to last page</span>
             <ChevronsRight />
@@ -96,4 +159,6 @@ export function DataTablePagination<TData>({
       </div>
     </div>
   );
-}
+};
+
+export default Pagination;
