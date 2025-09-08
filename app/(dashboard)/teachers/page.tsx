@@ -1,12 +1,15 @@
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
+import FormContainer from "@/components/forms/FormContainer";
 import TeachersTable from "@/components/tables/TeachersTable";
 import { getTeachers } from "@/lib/actions/teacher.action";
 
 const TeachersPage = async ({ searchParams }: RouteParams) => {
   const session = await auth();
   if (!session) redirect("/sign-in");
+
+  const role = session.user.role;
 
   const { page, pageSize, query, sort } = await searchParams;
 
@@ -19,7 +22,11 @@ const TeachersPage = async ({ searchParams }: RouteParams) => {
 
   return (
     <div className="container mx-auto mt-16 p-10">
-      <h1 className="pb-4 text-2xl font-bold">Teachers List</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="pb-4 text-2xl font-bold">Teachers List</h1>
+
+        {role === "ADMIN" && <FormContainer table="teacher" type="create" />}
+      </div>
       <TeachersTable role={session.user.role} data={result.data!} />
     </div>
   );
