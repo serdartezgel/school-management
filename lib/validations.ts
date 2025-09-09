@@ -53,3 +53,10 @@ export const TeacherSchema = z.object({
   experience: z.number().int().min(0).optional(),
   hireDate: z.date().optional(),
 });
+
+export const UpdateTeacherSchema = TeacherSchema.omit({
+  username: true,
+  password: true,
+}).extend({
+  userId: z.string({ error: "User ID is required." }),
+});

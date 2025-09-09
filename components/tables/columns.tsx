@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { formUrlQuery } from "@/lib/url";
 
+import FormContainer from "../forms/FormContainer";
+
 export const getTeacherColumns = (
   role: string,
   searchParams: ReadonlyURLSearchParams,
@@ -117,7 +119,15 @@ export const getTeacherColumns = (
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>Edit Teacher</DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  {role === "ADMIN" && (
+                    <FormContainer
+                      table="teacher"
+                      type="update"
+                      data={row.original}
+                    />
+                  )}
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ),

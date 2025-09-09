@@ -1,10 +1,15 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import z from "zod";
 
-import { TeacherSchema } from "@/lib/validations";
+import { createTeacher, updateTeacher } from "@/lib/actions/teacher.action";
+import { TeacherSchema, UpdateTeacherSchema } from "@/lib/validations";
 
 import { Button } from "../ui/button";
 import { DialogFooter } from "../ui/dialog";
@@ -30,30 +35,32 @@ import { Textarea } from "../ui/textarea";
 
 const TeacherForm = ({
   type,
-  data,
+  data: teacher,
 }: {
   type: "create" | "update";
   data?: TeacherDoc;
 }) => {
-  const form = useForm<z.infer<typeof TeacherSchema>>({
-    resolver: zodResolver(TeacherSchema),
-    defaultValues: data
+  const router = useRouter();
+  const [isPending, startTransition] = useTransition();
+
+  const schema = type === "update" ? UpdateTeacherSchema : TeacherSchema;
+  const defaultValues =
+    type === "update"
       ? {
-          username: data.account.username,
-          password: "",
-          employeeId: data.employeeId,
-          name: data.user.name,
-          email: data.user.email,
-          gender: data.user.gender,
-          image: data.user.image || "",
-          experience: data.experience || 0,
-          department: data.department || "",
-          phone: data.user.phone || "",
-          dateOfBirth: data.user.dateOfBirth
-            ? new Date(data.user.dateOfBirth)
+          employeeId: teacher?.employeeId ?? "",
+          name: teacher?.user.name ?? "",
+          email: teacher?.user.email ?? "",
+          gender: teacher?.user.gender ?? undefined,
+          image: teacher?.user.image ?? "",
+          experience: teacher?.experience ?? 0,
+          department: teacher?.department ?? "",
+          phone: teacher?.user.phone ?? "",
+          dateOfBirth: teacher?.user.dateOfBirth
+            ? new Date(teacher.user.dateOfBirth)
             : undefined,
-          hireDate: data.hireDate ? new Date(data.hireDate) : undefined,
-          address: data.user.address || "",
+          hireDate: teacher?.hireDate ? new Date(teacher.hireDate) : undefined,
+          address: teacher?.user.address ?? "",
+          userId: teacher?.user.id, // for update schema
         }
       : {
           username: "",
@@ -69,42 +76,89 @@ const TeacherForm = ({
           dateOfBirth: undefined,
           hireDate: undefined,
           address: "",
-        },
+        };
+
+  const form = useForm<z.infer<typeof schema>>({
+    resolver: zodResolver(schema),
+    defaultValues,
   });
+
+  const handleSubmit = async (data: z.infer<typeof schema>) => {
+    startTransition(async () => {
+      if (type === "update" && teacher) {
+        const updateData = data as z.infer<typeof UpdateTeacherSchema>;
+        const result = await updateTeacher(updateData);
+
+        if (result.success) {
+          toast.success("Success", {
+            description: "Teacher updated successfully.",
+          });
+
+          if (result.data) router.push(`/teachers/${result.data.userId}`);
+        } else {
+          toast.error(`Error ${result.status}`, {
+            description: result.error?.message || "Something went wrong.",
+          });
+        }
+
+        return;
+      }
+
+      const createData = data as z.infer<typeof TeacherSchema>;
+      const result = await createTeacher(createData);
+
+      if (result.success) {
+        toast.success("Success", {
+          description: "Teacher created successfully.",
+        });
+
+        if (result.data) router.push(`/teachers/${result.data.userId}`);
+      } else {
+        toast.error(`Error ${result.status}`, {
+          description: result.error?.message || "Something went wrong.",
+        });
+      }
+    });
+  };
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit((data) => console.log(data))}
+        onSubmit={form.handleSubmit(handleSubmit)}
         className="flex flex-col gap-4"
       >
         <div className="grid items-center gap-4 md:grid-cols-3">
-          <FormField
-            control={form.control}
-            name="username"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Username</FormLabel>
-                <FormControl>
-                  <Input type="text" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input type="password" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {type === "create" && (
+            <FormField
+              control={form.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input type="text" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {type === "create" && (
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input type="password" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+
           <FormField
             control={form.control}
             name="employeeId"
@@ -313,10 +367,17 @@ const TeacherForm = ({
         <DialogFooter>
           <Button
             type="submit"
-            disabled={form.formState.isSubmitting}
+            disabled={isPending}
             className="rounded-md bg-cyan-600 text-white hover:bg-cyan-500 max-md:w-full"
           >
-            {type === "create" ? "Create" : "Update"}
+            {isPending ? (
+              <>
+                <Loader className="mr-2 size-4 animate-spin" />
+                <span>Submitting</span>
+              </>
+            ) : (
+              <> {type === "create" ? "Create" : "Update"}</>
+            )}
           </Button>
         </DialogFooter>
       </form>
