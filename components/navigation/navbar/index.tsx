@@ -1,11 +1,14 @@
 import Image from "next/image";
 import Link from "next/link";
 
+import { auth } from "@/auth";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 
 import Theme from "./Theme";
 
-const Navbar = () => {
+const Navbar = async () => {
+  const session = await auth();
+
   return (
     <nav className="bg-sidebar fixed z-50 flex w-full items-center justify-between gap-5 border-b p-3 md:px-6">
       <Link
@@ -53,12 +56,16 @@ const Navbar = () => {
         </Link>
         <Theme />
         <div className="flex flex-col max-lg:hidden">
-          <span className="text-sm leading-3 font-medium">John Doe</span>
-          <span className="text-right text-[10px] text-gray-500">Admin</span>
+          <span className="text-sm leading-3 font-medium">
+            {session?.user.name}
+          </span>
+          <span className="text-right text-[10px] text-gray-500">
+            {session?.user.role}
+          </span>
         </div>
         <Image
-          src="/images/avatar.png"
-          alt="User"
+          src={session?.user.image || "/images/avatar.png"}
+          alt={session?.user.name || "User Avatar"}
           width={36}
           height={36}
           className="rounded-full max-md:hidden"
