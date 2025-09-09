@@ -4,10 +4,8 @@ import Image from "next/image";
 import { Button } from "../ui/button";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogTitle,
   DialogTrigger,
 } from "../ui/dialog";
@@ -82,14 +80,6 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
           </p>
         </DialogTitle>
         <FormComponent type={type} data={data} />
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline" className="max-md:w-full">
-              Cancel
-            </Button>
-          </DialogClose>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

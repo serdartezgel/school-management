@@ -12,7 +12,7 @@ import { createTeacher, updateTeacher } from "@/lib/actions/teacher.action";
 import { TeacherSchema, UpdateTeacherSchema } from "@/lib/validations";
 
 import { Button } from "../ui/button";
-import { DialogFooter } from "../ui/dialog";
+import { DialogClose, DialogFooter } from "../ui/dialog";
 import {
   Form,
   FormControl,
@@ -365,6 +365,11 @@ const TeacherForm = ({
           />
         </div>
         <DialogFooter>
+          <DialogClose asChild>
+            <Button variant="outline" className="max-md:w-full">
+              Cancel
+            </Button>
+          </DialogClose>
           <Button
             type="submit"
             disabled={isPending}
@@ -373,7 +378,6 @@ const TeacherForm = ({
             {isPending ? (
               <>
                 <Loader className="mr-2 size-4 animate-spin" />
-                <span>Submitting</span>
               </>
             ) : (
               <> {type === "create" ? "Create" : "Update"}</>

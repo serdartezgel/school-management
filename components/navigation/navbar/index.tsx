@@ -55,22 +55,27 @@ const Navbar = async () => {
           />
         </Link>
         <Theme />
-        <div className="flex flex-col max-lg:hidden">
-          <span className="text-sm leading-3 font-medium">
-            {session?.user.name}
-          </span>
-          <span className="text-right text-[10px] text-gray-500">
-            {session?.user.role}
-          </span>
-        </div>
-        <Image
-          src={session?.user.image || "/images/avatar.png"}
-          alt={session?.user.name || "User Avatar"}
-          width={36}
-          height={36}
-          className="rounded-full max-md:hidden"
-        />
-        <SidebarTrigger className="bg-background size-9 border md:hidden" />
+        <Link
+          className="flex items-center gap-4 max-md:hidden"
+          href={"/profile"}
+        >
+          <div className="flex flex-col max-lg:hidden">
+            <span className="text-sm leading-3 font-medium">
+              {session?.user.name}
+            </span>
+            <span className="text-right text-[10px] text-gray-500">
+              {session?.user.role}
+            </span>
+          </div>
+          <Image
+            src={session?.user.image || "/images/avatar.png"}
+            alt={session?.user.name || "User Avatar"}
+            width={36}
+            height={36}
+            className="rounded-full max-md:hidden"
+          />
+        </Link>
+        <SidebarTrigger variant={"outline"} className="size-9 md:hidden" />
       </div>
     </nav>
   );
