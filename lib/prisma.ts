@@ -32,7 +32,10 @@ const dbConnect = async (): Promise<PrismaClient> => {
   if (!cached.promise) {
     cached.promise = new Promise<PrismaClient>((resolve, reject) => {
       const prisma = new PrismaClient({
-        log: ["query", "info", "warn", "error"],
+        log:
+          process.env.NODE_ENV === "development"
+            ? ["query", "info", "warn", "error"]
+            : ["warn", "error"],
       });
 
       prisma

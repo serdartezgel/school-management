@@ -22,6 +22,7 @@ const LocalSearch = ({ route }: { route: string }) => {
           params: searchParams.toString(),
           key: "query",
           value: searchQuery,
+          pathname,
         });
 
         router.push(newUrl, { scroll: false });
@@ -30,6 +31,7 @@ const LocalSearch = ({ route }: { route: string }) => {
           const newUrl = removeKeysFromUrlQuery({
             params: searchParams.toString(),
             keysToRemove: ["query"],
+            pathname,
           });
 
           router.push(newUrl, { scroll: false });

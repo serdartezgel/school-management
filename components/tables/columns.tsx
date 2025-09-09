@@ -20,6 +20,7 @@ import { formUrlQuery } from "@/lib/url";
 export const getTeacherColumns = (
   role: string,
   searchParams: ReadonlyURLSearchParams,
+  pathname: string,
 ): ColumnDef<TeacherDoc>[] => [
   {
     accessorFn: (row) => row.user.image,
@@ -45,6 +46,7 @@ export const getTeacherColumns = (
         params: searchParams.toString(),
         key: "sort",
         value: searchParams.get("sort") === "desc" ? "asc" : "desc",
+        pathname,
       });
       return (
         <Link href={newUrl}>
@@ -84,7 +86,7 @@ export const getTeacherColumns = (
     accessorKey: "classes",
     header: "Classes",
   },
-  ...(role === "ADMIN" || role === "TEACHER"
+  ...(role === "ADMIN"
     ? [
         {
           accessorKey: "user.phone",
@@ -94,10 +96,6 @@ export const getTeacherColumns = (
           accessorKey: "user.address",
           header: "Address",
         },
-      ]
-    : []),
-  ...(role === "ADMIN"
-    ? [
         {
           id: "actions",
           header: "Actions",

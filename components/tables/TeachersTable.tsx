@@ -1,6 +1,6 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 import { Role } from "@/prisma/client";
 
@@ -16,8 +16,9 @@ const TeachersTable = ({
   role: Role;
   data: { teachers: TeacherDoc[]; isNext: boolean; totalTeachers: number };
 }) => {
+  const pathname = usePathname();
   const searchParams = useSearchParams();
-  const columns = getTeacherColumns(role, searchParams);
+  const columns = getTeacherColumns(role, searchParams, pathname);
 
   return (
     <>

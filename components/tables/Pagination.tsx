@@ -6,7 +6,7 @@ import {
   ChevronsLeft,
   ChevronsRight,
 } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 
 import { formUrlQuery, removeKeysFromUrlQuery } from "@/lib/url";
 
@@ -27,6 +27,7 @@ interface Props {
 const Pagination = ({ isNext, totalItems }: Props) => {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const pathname = usePathname();
 
   const page = searchParams.get("page") || 1;
   const pageSize = searchParams.get("pageSize") || 10;
@@ -39,6 +40,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
       params: searchParams.toString(),
       key: "page",
       value: nextPageNumber.toString(),
+      pathname,
     });
 
     router.push(newUrl);
@@ -48,6 +50,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
     const cleanedQuery = removeKeysFromUrlQuery({
       params: searchParams.toString(),
       keysToRemove: ["page"],
+      pathname,
     });
 
     const query = cleanedQuery.split("?")[1] ?? "";
@@ -56,6 +59,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
       params: query,
       key: "pageSize",
       value: size.toString(),
+      pathname,
     });
 
     router.push(newQuery);
@@ -65,6 +69,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
     const newUrl = removeKeysFromUrlQuery({
       params: searchParams.toString(),
       keysToRemove: ["page"],
+      pathname,
     });
 
     router.push(newUrl);
@@ -76,12 +81,14 @@ const Pagination = ({ isNext, totalItems }: Props) => {
     const cleanedQuery = removeKeysFromUrlQuery({
       params: searchParams.toString(),
       keysToRemove: ["page"],
+      pathname,
     });
 
     const newQuery = formUrlQuery({
       params: cleanedQuery.split("?")[1] ?? "",
       key: "page",
       value: lastPage.toString(),
+      pathname,
     });
 
     router.push(newQuery);

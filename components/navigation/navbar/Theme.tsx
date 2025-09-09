@@ -15,6 +15,15 @@ import { cn } from "@/lib/utils";
 
 const Theme = () => {
   const { setTheme, theme } = useTheme();
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null; // Avoid hydration error
+  }
 
   return (
     <DropdownMenu>
