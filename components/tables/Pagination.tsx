@@ -76,7 +76,9 @@ const Pagination = ({ isNext, totalItems }: Props) => {
   };
 
   const goToLastPage = () => {
-    const lastPage = Math.ceil(totalItems / Number(pageSize));
+    if (totalItems === 0) return;
+
+    const lastPage = Math.max(1, Math.ceil(totalItems / Number(pageSize)));
 
     const cleanedQuery = removeKeysFromUrlQuery({
       params: searchParams.toString(),
@@ -119,7 +121,10 @@ const Pagination = ({ isNext, totalItems }: Props) => {
 
       <div className="flex items-center space-x-6 lg:space-x-8">
         <div className="flex w-[100px] items-center justify-center text-sm font-medium">
-          Page {page} of {Math.ceil(totalItems / Number(pageSize))}
+          Page {page} of{" "}
+          {Math.ceil(totalItems / Number(pageSize)) === 0
+            ? 1
+            : Math.ceil(totalItems / Number(pageSize))}
         </div>
         <div className="flex items-center space-x-2">
           <Button
@@ -127,7 +132,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
             size="icon"
             className="hidden size-8 lg:flex"
             onClick={() => goToFirstPage()}
-            disabled={Number(page) === 1}
+            disabled={Number(page) === 1 || totalItems === 0}
           >
             <span className="sr-only">Go to first page</span>
             <ChevronsLeft />
@@ -137,7 +142,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
             size="icon"
             className="size-8"
             onClick={() => handleNavigation("prev")}
-            disabled={Number(page) === 1}
+            disabled={Number(page) === 1 || totalItems === 0}
           >
             <span className="sr-only">Go to previous page</span>
             <ChevronLeft />
@@ -147,7 +152,7 @@ const Pagination = ({ isNext, totalItems }: Props) => {
             size="icon"
             className="size-8"
             onClick={() => handleNavigation("next")}
-            disabled={!isNext}
+            disabled={!isNext || totalItems === 0}
           >
             <span className="sr-only">Go to next page</span>
             <ChevronRight />
@@ -157,7 +162,11 @@ const Pagination = ({ isNext, totalItems }: Props) => {
             size="icon"
             className="hidden size-8 lg:flex"
             onClick={() => goToLastPage()}
-            disabled={Number(page) === Math.ceil(totalItems / Number(pageSize))}
+            disabled={
+              totalItems === 0 ||
+              Number(page) ===
+                Math.max(1, Math.ceil(totalItems / Number(pageSize)))
+            }
           >
             <span className="sr-only">Go to last page</span>
             <ChevronsRight />

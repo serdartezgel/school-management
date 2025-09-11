@@ -58,7 +58,8 @@ async function main() {
       account: {
         create: {
           username: "admin",
-          password: "admin123", // In prod, hash the password
+          password:
+            "$2a$12$TrRdGc0N/u6Y7R.McXwhMOpJNemii1U5GY2vAEGKYiDzIq.YEngVa", // In prod, hash the password
         },
       },
     },
@@ -113,6 +114,75 @@ async function main() {
         department: getRandom(departments),
         experience: getRandomNumber(1, 20),
         hireDate,
+      },
+    });
+  }
+
+  // Create an academic year
+  const academicYear = await prisma.academicYear.create({
+    data: {
+      year: "2025-2026",
+      startDate: new Date("2025-09-01"),
+      endDate: new Date("2026-06-30"),
+      isActive: true,
+    },
+  });
+
+  // Create a class
+  const class1 = await prisma.class.create({
+    data: {
+      name: "Class A",
+      grade: "5",
+      section: "A",
+      academicYearId: academicYear.id,
+      capacity: 24,
+    },
+  });
+
+  // Create 2 parents
+  const parents = [];
+  for (let i = 1; i <= 2; i++) {
+    const parentUser = await prisma.user.create({
+      data: {
+        name: `Parent ${i}`,
+        email: `parent${i}@school.com`,
+        role: Role.PARENT,
+        gender: i % 2 === 0 ? Gender.FEMALE : Gender.MALE,
+      },
+    });
+
+    const parent = await prisma.parent.create({
+      data: {
+        userId: parentUser.id,
+        occupation: i % 2 === 0 ? "Teacher" : "Engineer",
+        relationship: i % 2 === 0 ? "Mother" : "Father",
+      },
+    });
+
+    parents.push(parent);
+  }
+
+  // Create 20 students
+  for (let i = 1; i <= 20; i++) {
+    const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
+    const studentUser = await prisma.user.create({
+      data: {
+        name: `Student ${i}`,
+        email: `student${i}@school.com`,
+        role: Role.STUDENT,
+        gender,
+      },
+    });
+
+    await prisma.student.create({
+      data: {
+        userId: studentUser.id,
+        studentId: (1000 + i).toString(),
+        classId: class1.id,
+        parentId: parents[i % 2].id, // assign parent alternately
+        admissionDate: new Date("2025-09-01"),
+        bloodGroup: i % 4 === 0 ? "A+" : "B+",
+        emergencyContact: "1234567890",
       },
     });
   }

@@ -11,7 +11,7 @@ import LocalSearch from "../search/LocalSearch";
 
 const TeachersTable = ({
   role,
-  data,
+  data = { teachers: [], isNext: false, totalTeachers: 0 },
 }: {
   role: Role;
   data: { teachers: TeacherDoc[]; isNext: boolean; totalTeachers: number };

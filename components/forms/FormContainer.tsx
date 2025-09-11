@@ -13,8 +13,11 @@ import {
 const TeacherForm = dynamic(() => import("./TeacherForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const StudentForm = dynamic(() => import("./StudentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
-interface FormContainerProps {
+interface FormContainerProps<T extends keyof FormDataMap = keyof FormDataMap> {
   table:
     | "teacher"
     | "student"
@@ -28,16 +31,19 @@ interface FormContainerProps {
     | "event"
     | "announcement";
   type: "create" | "update";
-  data?: TeacherDoc;
+  data?: FormDataMap[T];
 }
 
 const FormContainer = ({ table, type, data }: FormContainerProps) => {
   const forms: Record<
     FormContainerProps["table"],
-    React.ComponentType<{ type: "create" | "update"; data?: TeacherDoc }>
+    React.ComponentType<{
+      type: "create" | "update";
+      data?: FormDataMap[keyof FormDataMap];
+    }>
   > = {
     teacher: TeacherForm,
-    student: () => <p>Student form not implemented yet</p>,
+    student: StudentForm,
     parent: () => <p>Parent form not implemented yet</p>,
     subject: () => <p>Subject form not implemented yet</p>,
     class: () => <p>Class form not implemented yet</p>,
@@ -58,7 +64,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
           <Button className="bg-cyan-600 hover:bg-cyan-500">
             <Image
               src={`/images/${type}.png`}
-              alt={type + " " + table}
+              alt={`${type} ${table}`}
               width={16}
               height={16}
               className="invert-100"
@@ -66,7 +72,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
             <span className="sr-only">Create a {table}</span>
           </Button>
         ) : (
-          <Button variant={"ghost"} className="w-full px-2 py-1.5">
+          <Button variant="ghost" className="w-full px-2 py-1.5">
             Update {table}
             <span className="sr-only">Update a {table}</span>
           </Button>
