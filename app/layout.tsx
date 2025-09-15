@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import { SessionProvider } from "next-auth/react";
+import NextTopLoader from "nextjs-toploader";
 
 import { auth } from "@/auth";
 import { Toaster } from "@/components/ui/sonner";
@@ -29,6 +30,11 @@ const RootLayout = async ({ children }: { children: React.ReactNode }) => {
       <SessionProvider session={session}>
         <body className={`${inter.className} antialiased`}>
           <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+            <NextTopLoader
+              color="#06b6d4"
+              initialPosition={0.3}
+              showSpinner={false}
+            />
             {children}
 
             <Toaster />
