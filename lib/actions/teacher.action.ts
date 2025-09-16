@@ -174,6 +174,21 @@ export async function createTeacher(
 
     return { success: true, data: teacher };
   } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        const fields = error.meta?.target as string[];
+        return {
+          success: false,
+          error: {
+            message: "Unique constraint failed",
+            details: Object.fromEntries(
+              fields.map((f) => [f, [`${f} must be unique`]]),
+            ),
+          },
+          status: 400,
+        } satisfies ErrorResponse;
+      }
+    }
     return handleError(error) as ErrorResponse;
   }
 }
@@ -218,23 +233,27 @@ export async function updateTeacher(
       await tx.user.update({
         where: { id: userId },
         data: {
-          ...(name && { name }),
-          ...(email && { email }),
-          ...(phone && { phone }),
-          ...(address && { address }),
-          ...(dateOfBirth && { dateOfBirth: new Date(dateOfBirth) }),
-          ...(gender && { gender }),
-          ...(image && { image }),
+          ...(name !== undefined && { name }),
+          ...(email !== undefined && { email }),
+          ...(phone !== undefined && { phone }),
+          ...(address !== undefined && { address }),
+          ...(dateOfBirth !== undefined && {
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          }),
+          ...(gender !== undefined && { gender }),
+          ...(image !== undefined && { image }),
         },
       });
 
       const teacherProfile = await tx.teacher.update({
         where: { userId },
         data: {
-          ...(employeeId && { employeeId }),
-          ...(department && { department }),
+          ...(employeeId !== undefined && { employeeId }),
+          ...(department !== undefined && { department: department || null }),
           ...(experience !== undefined && { experience }),
-          ...(hireDate && { hireDate: new Date(hireDate) }),
+          ...(hireDate !== undefined && {
+            hireDate: hireDate ? new Date(hireDate) : null,
+          }),
         },
         include: { user: true },
       });

@@ -1,11 +1,22 @@
 "use server";
 
+import bcrypt from "bcryptjs";
+import z from "zod";
+
 import { Prisma } from "@/prisma/client";
 
 import action from "../handlers/action";
 import handleError from "../handlers/error";
+import { UnauthorizedError } from "../http-errors";
 import dbConnect from "../prisma";
-import { PaginatedSearchParamsSchema } from "../validations";
+import {
+  PaginatedSearchParamsSchema,
+  StudentSchema,
+  UpdateStudentSchema,
+} from "../validations";
+
+type CreateStudentParams = z.infer<typeof StudentSchema>;
+type UpdateStudentParams = z.infer<typeof UpdateStudentSchema>;
 
 export async function getStudents(params: PaginatedSearchParams): Promise<
   ActionResponse<{
@@ -82,6 +93,187 @@ export async function getStudents(params: PaginatedSearchParams): Promise<
         totalStudents,
       },
     };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function createStudent(
+  params: CreateStudentParams,
+): Promise<ActionResponse<StudentDoc>> {
+  const validationResult = await action({
+    params,
+    schema: StudentSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const {
+    name,
+    email,
+    phone,
+    address,
+    dateOfBirth,
+    gender,
+    image,
+    username,
+    password,
+    studentId,
+    bloodGroup,
+    parentId,
+    classId,
+    emergencyContact,
+    admissionDate,
+  } = validationResult.params!;
+
+  if (validationResult.session?.user.role !== "ADMIN")
+    throw new UnauthorizedError(
+      "You do not have permission to create a student",
+    );
+
+  const hashedPassword = await bcrypt.hash(password, 12);
+
+  const prisma = await dbConnect();
+
+  try {
+    const student = await prisma.$transaction(async (tx) => {
+      const user = await tx.user.create({
+        data: {
+          name,
+          email,
+          phone,
+          address,
+          dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          gender,
+          role: "STUDENT",
+          image,
+          createdById: validationResult.session?.user.id,
+        },
+      });
+
+      await tx.account.create({
+        data: {
+          userId: user.id,
+          username,
+          password: hashedPassword,
+        },
+      });
+
+      const studentProfile = await tx.student.create({
+        data: {
+          userId: user.id,
+          studentId,
+          parentId,
+          classId,
+          bloodGroup,
+          emergencyContact,
+          admissionDate: admissionDate ? new Date(admissionDate) : null,
+        },
+        include: { user: true },
+      });
+
+      return studentProfile;
+    });
+
+    return { success: true, data: student };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        const fields = error.meta?.target as string[];
+        return {
+          success: false,
+          error: {
+            message: "Unique constraint failed",
+            details: Object.fromEntries(
+              fields.map((f) => [f, [`${f} must be unique`]]),
+            ),
+          },
+          status: 400,
+        } satisfies ErrorResponse;
+      }
+    }
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function updateStudent(
+  params: UpdateStudentParams,
+): Promise<ActionResponse<StudentDoc>> {
+  const validationResult = await action({
+    params,
+    schema: UpdateStudentSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const {
+    name,
+    email,
+    phone,
+    address,
+    dateOfBirth,
+    gender,
+    image,
+    studentId,
+    bloodGroup,
+    parentId,
+    classId,
+    emergencyContact,
+    admissionDate,
+    userId,
+  } = validationResult.params!;
+
+  if (validationResult.session?.user.role !== "ADMIN")
+    throw new UnauthorizedError(
+      "You do not have permission to update a student",
+    );
+
+  const prisma = await dbConnect();
+
+  try {
+    const student = await prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: userId },
+        data: {
+          ...(name !== undefined && { name }),
+          ...(email !== undefined && { email }),
+          ...(phone !== undefined && { phone }),
+          ...(address !== undefined && { address }),
+          ...(dateOfBirth !== undefined && {
+            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
+          }),
+          ...(gender !== undefined && { gender }),
+          ...(image !== undefined && { image }),
+        },
+      });
+
+      const studentProfile = await tx.student.update({
+        where: { userId },
+        data: {
+          studentId,
+          classId,
+          ...(parentId !== undefined && { parentId: parentId || null }),
+          ...(bloodGroup !== undefined && { bloodGroup: bloodGroup || null }),
+          ...(emergencyContact !== undefined && {
+            emergencyContact: emergencyContact || null,
+          }),
+          ...(admissionDate !== undefined && {
+            admissionDate: admissionDate ? new Date(admissionDate) : null,
+          }),
+        },
+        include: { user: true },
+      });
+
+      return studentProfile;
+    });
+
+    return { success: true, data: student };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

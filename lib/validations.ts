@@ -57,6 +57,57 @@ export const TeacherSchema = z.object({
 export const UpdateTeacherSchema = TeacherSchema.omit({
   username: true,
   password: true,
-}).extend({
-  userId: z.string({ error: "User ID is required." }),
+})
+  .partial()
+  .extend({
+    userId: z.string({ error: "User ID is required." }),
+  });
+
+export const StudentSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: "Name needs to be at least 3 characters." }),
+  email: z.email({ message: "Invalid email." }),
+  phone: z
+    .string()
+    .regex(/^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/)
+    .or(z.literal("")),
+  address: z.string().max(255).optional(),
+  gender: z.enum(["MALE", "FEMALE"], { message: "Gender is required." }),
+  dateOfBirth: z.date().optional(),
+  image: z.url().or(z.literal("")),
+
+  username: z
+    .string()
+    .min(3, "Username needs to be at least 3 characters.")
+    .max(20, "Username can be maximum of 20 characters."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .regex(/[A-Z]/, "Must contain an uppercase letter")
+    .regex(/[a-z]/, "Must contain a lowercase letter")
+    .regex(/[0-9]/, "Must contain a number")
+    .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
+
+  studentId: z.string().min(4, "Student ID is required."),
+  admissionDate: z.date().optional(),
+  bloodGroup: z
+    .string()
+    .max(3, { message: "Blood group must be valid (e.g., A+, O-)." })
+    .optional(),
+  emergencyContact: z
+    .string()
+    .regex(/^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/)
+    .or(z.literal("")),
+  classId: z.string().min(1, { message: "Class ID is required." }),
+  parentId: z.string().optional(),
 });
+
+export const UpdateStudentSchema = StudentSchema.omit({
+  username: true,
+  password: true,
+})
+  .partial()
+  .extend({
+    userId: z.string({ error: "User ID is required." }),
+  });
