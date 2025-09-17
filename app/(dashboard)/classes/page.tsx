@@ -23,7 +23,7 @@ const ClassesPage = async ({ searchParams }: RouteParams) => {
   return (
     <div className="container mx-auto mt-16 p-10">
       <div className="flex items-center justify-between">
-        <h1 className="pb-4 text-2xl font-bold">Students List</h1>
+        <h1 className="pb-4 text-2xl font-bold">Classes List</h1>
 
         {role === "ADMIN" && <FormContainer table="class" type="create" />}
       </div>

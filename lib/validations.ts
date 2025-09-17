@@ -111,3 +111,14 @@ export const UpdateStudentSchema = StudentSchema.omit({
   .extend({
     userId: z.string({ error: "User ID is required." }),
   });
+
+export const ClassSchema = z.object({
+  grade: z.string().min(1, "Grade is required"),
+  section: z.string().min(1, "Section is required"),
+  academicYearId: z.string().min(1, "Invalid academic year id"),
+  capacity: z.number().int().min(1, "Capacity must be at least 1").optional(),
+});
+
+export const UpdateClassSchema = ClassSchema.partial().extend({
+  id: z.string("Class ID is required"),
+});

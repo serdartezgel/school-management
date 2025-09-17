@@ -10,11 +10,7 @@ import z from "zod";
 
 import { getClasses } from "@/lib/actions/class.action";
 import { createStudent, updateStudent } from "@/lib/actions/student.action";
-import {
-  StudentSchema,
-  UpdateStudentSchema,
-  UpdateTeacherSchema,
-} from "@/lib/validations";
+import { StudentSchema, UpdateStudentSchema } from "@/lib/validations";
 
 import { Button } from "../ui/button";
 import { DialogClose, DialogFooter } from "../ui/dialog";
@@ -100,7 +96,7 @@ const StudentForm = ({
   const handleSubmit = async (data: z.infer<typeof schema>) => {
     startTransition(async () => {
       if (type === "update" && student) {
-        const updateData = data as z.infer<typeof UpdateTeacherSchema>;
+        const updateData = data as z.infer<typeof UpdateStudentSchema>;
         const result = await updateStudent(updateData);
 
         if (result.success) {

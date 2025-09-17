@@ -16,6 +16,9 @@ const TeacherForm = dynamic(() => import("./TeacherForm"), {
 const StudentForm = dynamic(() => import("./StudentForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ClassForm = dynamic(() => import("./ClassForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 interface FormContainerProps<T extends keyof FormDataMap = keyof FormDataMap> {
   table:
@@ -46,7 +49,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
     student: StudentForm,
     parent: () => <p>Parent form not implemented yet</p>,
     subject: () => <p>Subject form not implemented yet</p>,
-    class: () => <p>Class form not implemented yet</p>,
+    class: ClassForm,
     exam: () => <p>Exam form not implemented yet</p>,
     assignment: () => <p>Assignment form not implemented yet</p>,
     result: () => <p>Result form not implemented yet</p>,
@@ -72,7 +75,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
             <span className="sr-only">Create a {table}</span>
           </Button>
         ) : (
-          <Button variant="ghost" className="w-full px-2 py-1.5">
+          <Button variant="ghost" className="w-full justify-start px-2 py-1.5">
             Update {table}
             <span className="sr-only">Update a {table}</span>
           </Button>
