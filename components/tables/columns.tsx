@@ -268,3 +268,104 @@ export const getStudentColumns = (
       ]
     : []),
 ];
+
+export const getClassColumns = (
+  role: string,
+  searchParams: ReadonlyURLSearchParams,
+  pathname: string,
+): ColumnDef<ClassDoc>[] => {
+  const makeSortableHeader = (key: string, label: string) => {
+    const currentSort = searchParams.get("sort") || "asc";
+    const currentSortBy = searchParams.get("sortBy") || "name";
+
+    const newUrl = formUrlQuery({
+      params: searchParams.toString(),
+      key: "sort",
+      value: currentSortBy === key && currentSort === "asc" ? "desc" : "asc",
+      pathname,
+    });
+
+    const urlWithSortBy = formUrlQuery({
+      params: newUrl.split("?")[1],
+      key: "sortBy",
+      value: key,
+      pathname,
+    });
+
+    return (
+      <Link href={urlWithSortBy}>
+        <Button
+          variant={"ghost"}
+          className="w-full cursor-pointer justify-between !pl-0"
+        >
+          {label}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  };
+  return [
+    {
+      accessorFn: (row) => row.name,
+      id: "name",
+      header: () => makeSortableHeader("name", "Name"),
+      cell: ({ row }) => (
+        <Link href={`/classes/${row.original.id}`}>{row.original.name}</Link>
+      ),
+    },
+    {
+      accessorKey: "grade",
+      header: () => makeSortableHeader("grade", "Grade"),
+    },
+    {
+      accessorKey: "section",
+      header: "Section",
+    },
+    {
+      accessorKey: "capacity",
+      header: "Capacity",
+    },
+    {
+      accessorKey: "academicYear.year",
+      header: () => makeSortableHeader("academicYear", "Academic Year"),
+    },
+    ...(role === "ADMIN"
+      ? [
+          {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }: { row: CoreRow<StudentDoc> }) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="h-8 w-8 p-0">
+                    <span className="sr-only">Open menu</span>
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuLabel className="sr-only">
+                    Actions
+                  </DropdownMenuLabel>
+                  <DropdownMenuItem>
+                    <Link href={`/classes/${row.original.id}`}>
+                      View Details
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    {role === "ADMIN" && (
+                      <FormContainer
+                        table="class"
+                        type="update"
+                        data={row.original}
+                      />
+                    )}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ),
+          },
+        ]
+      : []),
+  ];
+};

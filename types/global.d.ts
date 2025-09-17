@@ -27,4 +27,5 @@ interface PaginatedSearchParams {
   query?: string;
   filter?: string;
   sort?: SortOrder | undefined;
+  sortBy?: string;
 }

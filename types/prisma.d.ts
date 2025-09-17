@@ -68,4 +68,8 @@ declare global {
       };
     };
   }>;
+
+  export type ClassDoc = Prisma.ClassGetPayload<{
+    include: { academicYear: true };
+  }>;
 }

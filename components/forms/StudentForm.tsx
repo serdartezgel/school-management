@@ -3,11 +3,12 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import z from "zod";
 
+import { getClasses } from "@/lib/actions/class.action";
 import { createStudent, updateStudent } from "@/lib/actions/student.action";
 import {
   StudentSchema,
@@ -46,6 +47,8 @@ const StudentForm = ({
 }) => {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+
+  const [classes, setClasses] = useState<ClassDoc[]>([]);
 
   const schema = type === "update" ? UpdateStudentSchema : StudentSchema;
 
@@ -131,6 +134,14 @@ const StudentForm = ({
       }
     });
   };
+
+  useEffect(() => {
+    startTransition(async () => {
+      const result = await getClasses({ page: 1, pageSize: 100, query: "" });
+      if (result.success) setClasses(result.data?.classes || []);
+      else toast.error("Failed to load classes");
+    });
+  }, []);
 
   return (
     <Form {...form}>
@@ -309,8 +320,17 @@ const StudentForm = ({
                     <SelectContent>
                       <SelectGroup>
                         <SelectLabel>Class</SelectLabel>
-                        <SelectItem value="1A">1A</SelectItem>
-                        <SelectItem value="1B">1B</SelectItem>
+                        {classes.length === 0 ? (
+                          <SelectItem value="none" disabled>
+                            No classes available
+                          </SelectItem>
+                        ) : (
+                          classes.map((cls) => (
+                            <SelectItem key={cls.id} value={cls.id}>
+                              {cls.name} ({cls.capacity})
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectGroup>
                     </SelectContent>
                   </Select>
