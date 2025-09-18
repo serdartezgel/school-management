@@ -122,3 +122,48 @@ export const ClassSchema = z.object({
 export const UpdateClassSchema = ClassSchema.partial().extend({
   id: z.string("Class ID is required"),
 });
+
+export const ParentSchema = z.object({
+  name: z
+    .string()
+    .min(3, { message: "Name needs to be at least 3 characters." }),
+  email: z.email({ message: "Invalid email." }),
+  phone: z
+    .string()
+    .regex(/^([+]?[\s0-9]+)?(\d{3}|[(]?[0-9]+[)])?([-]?[\s]?[0-9])+$/)
+    .or(z.literal("")),
+  address: z.string().max(255).optional(),
+  gender: z.enum(["MALE", "FEMALE"], { message: "Gender is required." }),
+  dateOfBirth: z.date().optional(),
+  image: z.url().or(z.literal("")),
+
+  username: z
+    .string()
+    .min(3, "Username needs to be at least 3 characters.")
+    .max(20, "Username can be maximum of 20 characters."),
+  password: z
+    .string()
+    .min(8, "Password must be at least 8 characters.")
+    .regex(/[A-Z]/, "Must contain an uppercase letter")
+    .regex(/[a-z]/, "Must contain a lowercase letter")
+    .regex(/[0-9]/, "Must contain a number")
+    .regex(/[^A-Za-z0-9]/, "Must contain a special character"),
+
+  occupation: z.string().optional(),
+  relationship: z.string().optional(),
+
+  studentIds: z.array(z.string()).optional(),
+});
+
+export const UpdateParentSchema = ParentSchema.omit({
+  username: true,
+  password: true,
+})
+  .partial()
+  .extend({
+    userId: z.string({ error: "User ID is required." }),
+  });
+
+export const GetStudentsByIdSchema = z.object({
+  ids: z.array(z.string()).nonempty(),
+});

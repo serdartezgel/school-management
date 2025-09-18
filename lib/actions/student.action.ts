@@ -10,6 +10,7 @@ import handleError from "../handlers/error";
 import { UnauthorizedError } from "../http-errors";
 import dbConnect from "../prisma";
 import {
+  GetStudentsByIdSchema,
   PaginatedSearchParamsSchema,
   StudentSchema,
   UpdateStudentSchema,
@@ -274,6 +275,53 @@ export async function updateStudent(
     });
 
     return { success: true, data: student };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getStudentsById(params: GetStudentsByIdParams): Promise<
+  ActionResponse<{
+    students: StudentDoc[];
+  }>
+> {
+  const validationResult = await action({
+    params,
+    schema: GetStudentsByIdSchema,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+  const { ids } = validationResult.params!;
+
+  if (!ids || ids.length === 0) {
+    return {
+      success: true,
+      data: { students: [] },
+    };
+  }
+
+  const prisma = await dbConnect();
+
+  try {
+    const students = await prisma.student.findMany({
+      where: {
+        id: { in: ids },
+      },
+      include: {
+        user: true,
+        class: true,
+        parent: { include: { user: true } },
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        students,
+      },
+    };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

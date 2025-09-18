@@ -4,3 +4,7 @@ interface AuthCredentials {
   role: string;
   password: string;
 }
+
+interface GetStudentsByIdParams {
+  ids: string[];
+}

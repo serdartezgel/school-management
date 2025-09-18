@@ -433,7 +433,7 @@ export const getParentColumns = (
             <Link
               href={`/students/${child.id}`}
               key={child.id}
-              className="text-blue-600 hover:underline"
+              className="hover:underline"
             >
               {child.user.name}
             </Link>
@@ -478,7 +478,7 @@ export const getParentColumns = (
                 <DropdownMenuItem asChild>
                   {role === "ADMIN" && (
                     <FormContainer
-                      table="class"
+                      table="parent"
                       type="update"
                       data={row.original}
                     />

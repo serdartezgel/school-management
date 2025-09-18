@@ -19,6 +19,9 @@ const StudentForm = dynamic(() => import("./StudentForm"), {
 const ClassForm = dynamic(() => import("./ClassForm"), {
   loading: () => <h1>Loading...</h1>,
 });
+const ParentForm = dynamic(() => import("./ParentForm"), {
+  loading: () => <h1>Loading...</h1>,
+});
 
 interface FormContainerProps<T extends keyof FormDataMap = keyof FormDataMap> {
   table:
@@ -47,7 +50,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
   > = {
     teacher: TeacherForm,
     student: StudentForm,
-    parent: () => <p>Parent form not implemented yet</p>,
+    parent: ParentForm,
     subject: () => <p>Subject form not implemented yet</p>,
     class: ClassForm,
     exam: () => <p>Exam form not implemented yet</p>,
