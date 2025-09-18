@@ -369,3 +369,125 @@ export const getClassColumns = (
       : []),
   ];
 };
+
+export const getParentColumns = (
+  role: string,
+  searchParams: ReadonlyURLSearchParams,
+  pathname: string,
+): ColumnDef<ParentDoc>[] => [
+  {
+    accessorFn: (row) => row.user.image,
+    id: "image",
+    header: "Image",
+    cell: ({ row }) => (
+      <div className="flex items-center justify-center">
+        <Image
+          src={row.original.user.image || "/images/noAvatar.png"}
+          alt={row.original.user.name || ""}
+          width={32}
+          height={32}
+          className="rounded-full object-contain"
+        ></Image>
+      </div>
+    ),
+  },
+  {
+    accessorFn: (row) => row.user.name,
+    id: "name",
+    header: () => {
+      const newUrl = formUrlQuery({
+        params: searchParams.toString(),
+        key: "sort",
+        value: searchParams.get("sort") === "asc" ? "desc" : "asc",
+        pathname,
+      });
+      return (
+        <Link href={newUrl}>
+          <Button
+            variant={"ghost"}
+            className="w-full cursor-pointer justify-between !pl-0"
+          >
+            Name
+            <ArrowUpDown className="ml-2 h-4 w-4" />
+          </Button>
+        </Link>
+      );
+    },
+    cell: ({ row }) => (
+      <Link href={`/parents/${row.original.userId}`}>
+        {row.original.user.name}
+      </Link>
+    ),
+  },
+  {
+    id: "children",
+    header: "Children",
+    cell: ({ row }) => {
+      const children = row.original.children || [];
+
+      if (children.length === 0)
+        return <span className="text-gray-500">No children</span>;
+      return (
+        <div className="flex flex-wrap gap-3">
+          {children.map((child: StudentDoc) => (
+            <Link
+              href={`/students/${child.id}`}
+              key={child.id}
+              className="text-blue-600 hover:underline"
+            >
+              {child.user.name}
+            </Link>
+          ))}
+        </div>
+      );
+    },
+  },
+  {
+    accessorKey: "user.phone",
+    header: "Phone",
+  },
+  {
+    accessorKey: "user.email",
+    header: "Email",
+  },
+  {
+    accessorKey: "occupation",
+    header: "Occupation",
+  },
+  ...(role === "ADMIN"
+    ? [
+        {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }: { row: CoreRow<StudentDoc> }) => (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-8 w-8 p-0">
+                  <span className="sr-only">Open menu</span>
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel className="sr-only">
+                  Actions
+                </DropdownMenuLabel>
+                <DropdownMenuItem>
+                  <Link href={`/classes/${row.original.id}`}>View Details</Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  {role === "ADMIN" && (
+                    <FormContainer
+                      table="class"
+                      type="update"
+                      data={row.original}
+                    />
+                  )}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ),
+        },
+      ]
+    : []),
+];
