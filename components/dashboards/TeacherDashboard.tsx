@@ -1,5 +1,27 @@
+import PendingTasksCard from "../cards/PendingTasksCard";
 import Timetable from "../timetables/Timetable";
 import { Separator } from "../ui/separator";
+
+const tasks = [
+  {
+    id: "1",
+    title: "Math Homework 5",
+    type: "assignment",
+    dueDate: "2025-09-21",
+    className: "Grade 5A",
+    subject: "Math",
+    graded: false,
+  },
+  {
+    id: "2",
+    title: "Science Exam",
+    type: "exam",
+    dueDate: "2025-09-22",
+    className: "Grade 5A",
+    subject: "Science",
+    graded: false,
+  },
+];
 
 const TeacherDashboard = () => {
   const academicYear = {
@@ -19,7 +41,9 @@ const TeacherDashboard = () => {
         />
       </section>
 
-      <section className="flex flex-col gap-4 p-4 xl:flex-row"></section>
+      <section className="flex flex-col gap-4 xl:flex-row">
+        <PendingTasksCard tasks={tasks} />
+      </section>
     </>
   );
 };
