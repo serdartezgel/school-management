@@ -72,4 +72,8 @@ declare global {
   export type ClassDoc = Prisma.ClassGetPayload<{
     include: { academicYear: true };
   }>;
+
+  export type SubjectDoc = Prisma.SubjectGetPayload<{
+    include: { academicYear: true };
+  }>;
 }

@@ -34,10 +34,74 @@ const departments = [
   "English",
   "History",
 ];
+
+const subjects = [
+  {
+    name: "Mathematics",
+    code: "MATH101",
+    credits: 4,
+    description: "Basic and advanced mathematics concepts",
+  },
+  {
+    name: "English Language",
+    code: "ENG101",
+    credits: 3,
+    description: "Grammar, writing, and comprehension",
+  },
+  {
+    name: "Physics",
+    code: "PHY101",
+    credits: 4,
+    description: "Mechanics, thermodynamics, and waves",
+  },
+  {
+    name: "Chemistry",
+    code: "CHEM101",
+    credits: 4,
+    description: "Organic and inorganic chemistry",
+  },
+  {
+    name: "Biology",
+    code: "BIO101",
+    credits: 4,
+    description: "Cell biology, genetics, and ecology",
+  },
+  {
+    name: "History",
+    code: "HIS101",
+    credits: 3,
+    description: "World history and civilizations",
+  },
+  {
+    name: "Geography",
+    code: "GEO101",
+    credits: 3,
+    description: "Physical and human geography",
+  },
+  {
+    name: "Computer Science",
+    code: "CS101",
+    credits: 4,
+    description: "Programming and computer systems",
+  },
+  {
+    name: "Art",
+    code: "ART101",
+    credits: 2,
+    description: "Drawing, painting, and creative design",
+  },
+  {
+    name: "Physical Education",
+    code: "PE101",
+    credits: 2,
+    description: "Sports, fitness, and health",
+  },
+];
+
 const streets = ["Maple St", "Oak Ave", "Pine Rd", "Cedar Ln", "Birch Dr"];
 const genders: Gender[] = [Gender.MALE, Gender.FEMALE];
 
-function getRandom<T>(arr: T[]) {
+function getRandom<T>(arr: T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
 }
 
@@ -46,11 +110,13 @@ function getRandomNumber(min: number, max: number) {
 }
 
 async function main() {
-  console.log("Seeding database...");
+  console.log("🌱 Seeding database...");
 
-  // Create Admin User
-  const admin = await prisma.user.create({
-    data: {
+  // 1. Admin User
+  const admin = await prisma.user.upsert({
+    where: { email: "admin@example.com" },
+    update: {},
+    create: {
       email: "admin@example.com",
       name: "Admin User",
       gender: Gender.MALE,
@@ -59,23 +125,55 @@ async function main() {
         create: {
           username: "admin",
           password:
-            "$2a$12$TrRdGc0N/u6Y7R.McXwhMOpJNemii1U5GY2vAEGKYiDzIq.YEngVa", // In prod, hash the password
+            "$2a$12$TrRdGc0N/u6Y7R.McXwhMOpJNemii1U5GY2vAEGKYiDzIq.YEngVa", // bcrypt("password")
         },
       },
     },
   });
 
-  await prisma.admin.create({
-    data: {
-      userId: admin.id,
+  await prisma.admin.upsert({
+    where: { userId: admin.id },
+    update: {},
+    create: { userId: admin.id },
+  });
+
+  // 2. Academic Year
+  const academicYear = await prisma.academicYear.upsert({
+    where: { year: "2025-2026" },
+    update: {},
+    create: {
+      year: "2025-2026",
+      startDate: new Date("2025-09-01"),
+      endDate: new Date("2026-06-30"),
+      isActive: true,
     },
   });
 
+  // 3. One Class (compound unique: grade + section + academicYearId)
+  const class1 = await prisma.class.upsert({
+    where: {
+      grade_section_academicYearId: {
+        grade: "5",
+        section: "A",
+        academicYearId: academicYear.id,
+      },
+    },
+    update: {},
+    create: {
+      name: "Class 5A",
+      grade: "5",
+      section: "A",
+      academicYearId: academicYear.id,
+      capacity: 24,
+    },
+  });
+
+  // 4. Teachers
   for (let i = 1; i <= 20; i++) {
     const firstName = getRandom(firstNames);
     const lastName = getRandom(lastNames);
     const fullName = `${firstName} ${lastName}`;
-    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`;
+    const email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@school.com`;
     const phone = `555-${1000 + i}`;
     const address = `${getRandomNumber(1, 99)} ${getRandom(streets)}`;
     const gender = getRandom(genders);
@@ -92,8 +190,7 @@ async function main() {
     const employeeId = `EMP${1000 + i}`;
     const image = `https://randomuser.me/api/portraits/${gender === Gender.MALE ? "men" : "women"}/${i}.jpg`;
 
-    // Create user
-    const user = await prisma.user.create({
+    const teacherUser = await prisma.user.create({
       data: {
         email,
         name: fullName,
@@ -106,10 +203,9 @@ async function main() {
       },
     });
 
-    // Create related teacher profile
     await prisma.teacher.create({
       data: {
-        userId: user.id,
+        userId: teacherUser.id,
         employeeId,
         department: getRandom(departments),
         experience: getRandomNumber(1, 20),
@@ -118,28 +214,7 @@ async function main() {
     });
   }
 
-  // Create an academic year
-  const academicYear = await prisma.academicYear.create({
-    data: {
-      year: "2025-2026",
-      startDate: new Date("2025-09-01"),
-      endDate: new Date("2026-06-30"),
-      isActive: true,
-    },
-  });
-
-  // Create a class
-  const class1 = await prisma.class.create({
-    data: {
-      name: "Class A",
-      grade: "5",
-      section: "A",
-      academicYearId: academicYear.id,
-      capacity: 24,
-    },
-  });
-
-  // Create 2 parents
+  // 5. Parents
   const parents = [];
   for (let i = 1; i <= 2; i++) {
     const parentUser = await prisma.user.create({
@@ -162,7 +237,7 @@ async function main() {
     parents.push(parent);
   }
 
-  // Create 20 students
+  // 6. Students
   for (let i = 1; i <= 20; i++) {
     const gender = i % 2 === 0 ? Gender.FEMALE : Gender.MALE;
     const studentUser = await prisma.user.create({
@@ -179,7 +254,7 @@ async function main() {
         userId: studentUser.id,
         studentId: (1000 + i).toString(),
         classId: class1.id,
-        parentId: parents[i % 2].id, // assign parent alternately
+        parentId: parents[i % 2].id,
         admissionDate: new Date("2025-09-01"),
         bloodGroup: i % 4 === 0 ? "A+" : "B+",
         emergencyContact: "1234567890",
@@ -187,12 +262,24 @@ async function main() {
     });
   }
 
-  console.log("Seeding completed!");
+  // 7. Subjects
+  for (const subject of subjects) {
+    await prisma.subject.upsert({
+      where: { code: subject.code },
+      update: {},
+      create: {
+        ...subject,
+        academicYearId: academicYear.id,
+      },
+    });
+  }
+
+  console.log("✅ Seeding completed!");
 }
 
 main()
   .catch((e) => {
-    console.error(e);
+    console.error("❌ Seeding error:", e);
     process.exit(1);
   })
   .finally(async () => {
