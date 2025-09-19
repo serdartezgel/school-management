@@ -18,10 +18,15 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 import { sidebarLinks } from "@/constants";
+import { Role } from "@/prisma/client";
 
 import { Button } from "../ui/button";
 
-const LeftSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
+interface LeftSidebarProps extends React.ComponentProps<typeof Sidebar> {
+  role: Role;
+}
+
+const LeftSidebar = ({ role, ...props }: LeftSidebarProps) => {
   const pathname = usePathname();
 
   const isActivePath = (path: string) => {
@@ -60,25 +65,30 @@ const LeftSidebar = ({ ...props }: React.ComponentProps<typeof Sidebar>) => {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {sidebarLinks.items.map((item) => (
-                <SidebarMenuItem key={item.label} className="pl-4">
-                  <SidebarMenuButton asChild isActive={isActivePath(item.href)}>
-                    <Link
-                      href={item.href}
-                      className="flex items-center gap-3 font-medium"
+              {sidebarLinks.items
+                .filter((item) => item.visible.includes(role))
+                .map((item) => (
+                  <SidebarMenuItem key={item.label} className="pl-4">
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActivePath(item.href)}
                     >
-                      <Image
-                        src={item.icon}
-                        alt={item.label}
-                        width={20}
-                        height={20}
-                        className="dark:invert-100"
-                      />
-                      <span>{item.label}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+                      <Link
+                        href={item.href}
+                        className="flex items-center gap-3 font-medium"
+                      >
+                        <Image
+                          src={item.icon}
+                          alt={item.label}
+                          width={20}
+                          height={20}
+                          className="dark:invert-100"
+                        />
+                        <span>{item.label}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

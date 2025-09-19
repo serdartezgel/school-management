@@ -18,19 +18,17 @@ interface PendingTasksCardProps {
 }
 
 const PendingTasksCard = ({ tasks = [] }: PendingTasksCardProps) => {
-  const pendingTasks = tasks.filter((task) => !task.graded);
-
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Pending Tasks</CardTitle>
       </CardHeader>
       <CardContent>
-        {pendingTasks.length === 0 ? (
+        {tasks.length === 0 ? (
           <p className="text-muted-foreground">No pending tasks 🎉</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {pendingTasks.map((task) => (
+            {tasks.map((task) => (
               <li
                 key={task.id}
                 className="hover:bg-muted flex justify-between rounded-md border px-4 py-2"
@@ -59,7 +57,7 @@ const PendingTasksCard = ({ tasks = [] }: PendingTasksCardProps) => {
         <Separator className="my-2" />
 
         <p className="text-muted-foreground text-sm">
-          Total pending: {pendingTasks.length}
+          Total pending: {tasks.length}
         </p>
       </CardContent>
     </Card>

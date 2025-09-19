@@ -29,6 +29,8 @@ const TeacherDashboard = () => {
     endDate: new Date("2026-06-30"),
   };
 
+  const filteredTasks = tasks.filter((task) => !task.graded);
+
   return (
     <>
       <section className="bg-sidebar flex flex-wrap justify-start gap-4 rounded-lg border-1 p-4 lg:justify-center">
@@ -42,7 +44,7 @@ const TeacherDashboard = () => {
       </section>
 
       <section className="flex flex-col gap-4 xl:flex-row">
-        <PendingTasksCard tasks={tasks} />
+        <PendingTasksCard tasks={filteredTasks} />
       </section>
     </>
   );
