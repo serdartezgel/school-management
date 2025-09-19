@@ -546,7 +546,7 @@ export const getSubjectColumns = (
     },
     {
       accessorKey: "credits",
-      header: "Credits",
+      header: () => makeSortableHeader("credits", "Credits"),
     },
     {
       accessorKey: "academicYear.year",

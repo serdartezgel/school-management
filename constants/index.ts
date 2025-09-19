@@ -26,22 +26,22 @@ export const sidebarLinks = {
       visible: ["admin", "teacher"],
     },
     {
-      icon: "/images/subject.png",
-      label: "Subjects",
-      href: "/subjects",
-      visible: ["admin"],
-    },
-    {
       icon: "/images/class.png",
       label: "Classes",
       href: "/classes",
       visible: ["admin", "teacher"],
     },
     {
-      icon: "/images/lesson.png",
-      label: "Lessons",
-      href: "/lessons",
-      visible: ["admin", "teacher"],
+      icon: "/images/subject.png",
+      label: "Subjects",
+      href: "/subjects",
+      visible: ["admin"],
+    },
+    {
+      icon: "/images/attendance.png",
+      label: "Attendance",
+      href: "/attendance",
+      visible: ["admin", "teacher", "student", "parent"],
     },
     {
       icon: "/images/exam.png",
@@ -59,12 +59,6 @@ export const sidebarLinks = {
       icon: "/images/result.png",
       label: "Results",
       href: "/results",
-      visible: ["admin", "teacher", "student", "parent"],
-    },
-    {
-      icon: "/images/attendance.png",
-      label: "Attendance",
-      href: "/attendance",
       visible: ["admin", "teacher", "student", "parent"],
     },
     {

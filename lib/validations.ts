@@ -167,3 +167,15 @@ export const UpdateParentSchema = ParentSchema.omit({
 export const GetStudentsByIdSchema = z.object({
   ids: z.array(z.string()).nonempty(),
 });
+
+export const SubjectSchema = z.object({
+  name: z.string().min(1, "Subject name is required."),
+  code: z.string().min(1, "Subject code is required."),
+  description: z.string().max(300).optional(),
+  credits: z.number().int().min(0).optional(),
+  academicYearId: z.string().min(1, "Invalid academic year id"),
+});
+
+export const UpdateSubjectSchema = SubjectSchema.partial().extend({
+  id: z.string({ error: "Subject ID is required" }),
+});
