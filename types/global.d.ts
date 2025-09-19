@@ -29,3 +29,35 @@ interface PaginatedSearchParams {
   sort?: SortOrder | undefined;
   sortBy?: string;
 }
+
+type FormDataMap = {
+  teacher: TeacherDoc;
+  student: StudentDoc;
+  parent: ParentDoc;
+  subject: SubjectDoc;
+  class: ClassDoc;
+  exam: ExamDoc;
+  assignment: AssignmentDoc;
+  result: ResultDoc;
+  attendance: AttendanceDoc;
+  event: EventDoc;
+  announcement: AnnouncementDoc;
+};
+
+interface TimetableEntry {
+  id: string;
+  name: string;
+  type: "class" | "exam";
+  day:
+    | "Monday"
+    | "Tuesday"
+    | "Wednesday"
+    | "Thursday"
+    | "Friday"
+    | "Saturday"
+    | "Sunday";
+  startTime: string;
+  endTime: string;
+  subject?: string;
+  location?: string;
+}
