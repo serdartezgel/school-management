@@ -1,44 +1,42 @@
+"use client";
+
 import DailyTimetable from "./DailyTimetable";
 import WeeklyTimetable from "./WeeklyTimetable";
-import { Separator } from "../ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 interface TimetableProps {
-  role: "TEACHER" | "STUDENT" | "PARENT";
   dailyEntries: TimetableEntry[];
   weeklyEntries: TimetableEntry[];
   academicYear: { startDate: Date; endDate: Date };
 }
 
 const Timetable = ({
-  role,
   dailyEntries,
   weeklyEntries,
   academicYear,
 }: TimetableProps) => {
   return (
-    <div className="flex w-full flex-col gap-6">
+    <div className="flex h-[700px] w-full flex-col gap-6 overflow-x-auto">
       <Tabs
         defaultValue="daily"
-        className="flex w-full items-center justify-center"
+        className="flex h-full w-full items-start justify-start gap-3"
       >
-        <TabsList>
+        <TabsList className="w-full">
           <TabsTrigger value="daily">Daily</TabsTrigger>
           <TabsTrigger value="weekly">Weekly</TabsTrigger>
         </TabsList>
-        <Separator />
-        <TabsContent value="daily">
+        <TabsContent value="daily" className="h-full w-full min-w-md">
           <DailyTimetable
             entries={dailyEntries}
-            role={role}
             academicYear={academicYear}
+            view="day"
           />
         </TabsContent>
-        <TabsContent value="weekly">
+        <TabsContent value="weekly" className="h-full w-full min-w-md">
           <WeeklyTimetable
             entries={weeklyEntries}
-            role={role}
             academicYear={academicYear}
+            view="work_week"
           />
         </TabsContent>
       </Tabs>

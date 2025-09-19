@@ -9,11 +9,10 @@ const TeacherDashboard = () => {
 
   return (
     <>
-      <section className="bg-sidebar flex flex-wrap justify-start gap-4 rounded-lg p-4 lg:justify-center">
-        <h1 className="text-xl font-bold">Schedule</h1>
+      <section className="bg-sidebar flex flex-wrap justify-start gap-4 rounded-lg border-1 p-4 lg:justify-center">
+        <h1 className="flex w-full items-start text-xl font-bold">Schedule</h1>
         <Separator />
         <Timetable
-          role={"TEACHER"}
           dailyEntries={[]}
           weeklyEntries={[]}
           academicYear={academicYear}

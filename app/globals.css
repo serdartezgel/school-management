@@ -124,3 +124,30 @@
 @utility no-focus {
   @apply focus-visible:ring-0! focus-visible:ring-transparent! focus-visible:ring-offset-0!;
 }
+
+.rbc-time-view {
+  background-color: var(--background) !important;
+  border-radius: var(--radius) !important;
+  overflow: hidden;
+}
+
+.rbc-allday-cell {
+  display: none !important;
+}
+
+.rbc-day-slot {
+  background-color: var(--background) !important;
+  border: none !important;
+}
+
+.rbc-time-content {
+  border: none !important;
+}
+
+.rbc-event {
+  border-radius: calc(var(--radius) / 2) !important;
+}
+
+.rbc-today {
+  background-color: var(--muted) !important;
+}
