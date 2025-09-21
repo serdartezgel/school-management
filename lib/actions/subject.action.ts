@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import z from "zod";
 
 import { Prisma } from "@/prisma/client";
@@ -17,7 +18,9 @@ import {
 type CreateSubjectParams = z.infer<typeof SubjectSchema>;
 type UpdateSubjectParams = z.infer<typeof UpdateSubjectSchema>;
 
-export async function getSubjects(params: PaginatedSearchParams): Promise<
+export const getSubjects = cache(async function getSubjects(
+  params: PaginatedSearchParams,
+): Promise<
   ActionResponse<{
     subjects: SubjectDoc[];
     isNext: boolean;
@@ -101,7 +104,7 @@ export async function getSubjects(params: PaginatedSearchParams): Promise<
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }
-}
+});
 
 export async function createSubject(
   params: CreateSubjectParams,

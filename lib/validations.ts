@@ -19,7 +19,9 @@ export const PaginatedSearchParamsSchema = z.object({
   pageSize: z.number().int().min(1, "Page size must be at least 1").default(10),
   query: z.string().optional(),
   filter: z.string().optional(),
+  filterBy: z.string().optional(),
   sort: z.string().optional(),
+  sortBy: z.string().optional(),
 });
 
 export const TeacherSchema = z.object({
@@ -178,4 +180,8 @@ export const SubjectSchema = z.object({
 
 export const UpdateSubjectSchema = SubjectSchema.partial().extend({
   id: z.string({ error: "Subject ID is required" }),
+});
+
+export const GetAttendanceNumbersSchema = z.object({
+  date: z.date(),
 });

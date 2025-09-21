@@ -39,7 +39,7 @@ declare global {
       };
     };
   }>;
-  export type StudentAccount = Prisma.StudentGetPayload<{
+  type StudentAccount = Prisma.StudentGetPayload<{
     include: {
       user: {
         include: {
@@ -49,14 +49,14 @@ declare global {
     };
   }>;
 
-  export type ParentDoc = Prisma.ParentGetPayload<{
+  type ParentDoc = Prisma.ParentGetPayload<{
     include: {
       user: true;
       children: true;
     };
   }>;
 
-  export type ParentAccount = Prisma.ParentGetPayload<{
+  type ParentAccount = Prisma.ParentGetPayload<{
     include: {
       user: {
         include: {
@@ -66,11 +66,24 @@ declare global {
     };
   }>;
 
-  export type ClassDoc = Prisma.ClassGetPayload<{
+  type ClassDoc = Prisma.ClassGetPayload<{
     include: { academicYear: true };
   }>;
 
-  export type SubjectDoc = Prisma.SubjectGetPayload<{
+  type SubjectDoc = Prisma.SubjectGetPayload<{
     include: { academicYear: true };
   }>;
+
+  type AttendanceDoc = Prisma.AttendanceGetPayload<{
+    include: {
+      student: { include: { user: true } };
+      classSubject: { include: { class: true; subject: true } };
+      teacher: { include: { teacher: { include: { user: true } } } };
+      academicYear: true;
+    };
+  }>;
+
+  interface GetAttendanceNumbersParams {
+    date: Date;
+  }
 }

@@ -118,13 +118,8 @@ model Teacher {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  classes     ClassTeacher[]
-  subjects    SubjectTeacher[]
-  attendances Attendance[]
-  grades      Grade[]
-  schedules   Schedule[]
-  exams       Exam[]
-  assignments Assignment[]
+  classes  ClassTeacher[]
+  subjects SubjectTeacher[]
 
   @@map("teachers")
 }
@@ -191,18 +186,14 @@ model Class {
 
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
 
-  students    Student[]
-  teachers    ClassTeacher[]
-  subjects    ClassSubject[]
-  attendances Attendance[]
-  schedules   Schedule[]
-
-  createdAt     DateTime            @default(now())
-  updatedAt     DateTime            @updatedAt
-  assignments   Assignment[]
-  exams         Exam[]
+  students      Student[]
+  teachers      ClassTeacher[]
+  subjects      ClassSubject[]
   events        EventClass[]
   announcements AnnouncementClass[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([grade, section, academicYearId])
   @@map("classes")
@@ -218,12 +209,8 @@ model Subject {
 
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
 
-  classes     ClassSubject[]
-  teachers    SubjectTeacher[]
-  grades      Grade[]
-  schedules   Schedule[]
-  assignments Assignment[]
-  exams       Exam[]
+  classes  ClassSubject[]
+  teachers SubjectTeacher[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -240,6 +227,11 @@ model ClassTeacher {
   class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
+  schedules   Schedule[]
+  assignments Assignment[]
+  exams       Exam[]
+  attendances Attendance[]
+
   @@unique([classId, teacherId])
   @@map("class_teachers")
 }
@@ -252,6 +244,11 @@ model SubjectTeacher {
   subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
   teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
+  grades      Grade[]
+  schedules   Schedule[]
+  assignments Assignment[]
+  exams       Exam[]
+
   @@map("subject_teachers")
 }
 
@@ -263,6 +260,12 @@ model ClassSubject {
   class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
   subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
 
+  attendances Attendance[]
+  schedules   Schedule[]
+  grades      Grade[]
+  assignments Assignment[]
+  exams       Exam[]
+
   @@unique([classId, subjectId])
   @@map("class_subjects")
 }
@@ -270,71 +273,71 @@ model ClassSubject {
 model Attendance {
   id             String           @id @default(cuid())
   studentId      String
-  classId        String
-  teacherId      String
+  classSubjectId String
+  classTeacherId String
   date           DateTime
   status         AttendanceStatus
   remarks        String?
   academicYearId String
 
   student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  class        Class        @relation(fields: [classId], references: [id], onDelete: Cascade)
-  teacher      Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  classSubject ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  teacher      ClassTeacher @relation(fields: [classTeacherId], references: [id], onDelete: Cascade)
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, classId, date])
-  @@index([classId, date])
+  @@unique([studentId, classSubjectId, date])
+  @@index([classSubjectId, date])
   @@map("attendances")
 }
 
 model Grade {
-  id             String    @id @default(cuid())
-  studentId      String
-  subjectId      String
-  teacherId      String
-  examId         String?
-  assignmentId   String?
-  type           GradeType
-  title          String // e.g., "Math Quiz 1", "Final Exam"
-  score          Decimal   @db.Decimal(5, 2)
-  maxScore       Decimal   @db.Decimal(5, 2)
-  grade          String? // A, B, C, etc.
-  remarks        String?
-  examDate       DateTime
-  academicYearId String
+  id               String    @id @default(cuid())
+  studentId        String
+  classSubjectId   String
+  subjectTeacherId String
+  examId           String?
+  assignmentId     String?
+  type             GradeType
+  title            String // e.g., "Math Quiz 1", "Final Exam"
+  score            Decimal   @db.Decimal(5, 2)
+  maxScore         Decimal   @db.Decimal(5, 2)
+  grade            String? // A, B, C, etc.
+  remarks          String?
+  examDate         DateTime
+  academicYearId   String
 
-  student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
-  subject      Subject      @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  teacher      Teacher      @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  exam         Exam?        @relation(fields: [examId], references: [id])
-  assignment   Assignment?  @relation(fields: [assignmentId], references: [id])
-  academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
+  student      Student        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  classSubject ClassSubject   @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  teacher      SubjectTeacher @relation(fields: [subjectTeacherId], references: [id], onDelete: Cascade)
+  exam         Exam?          @relation(fields: [examId], references: [id])
+  assignment   Assignment?    @relation(fields: [assignmentId], references: [id])
+  academicYear AcademicYear   @relation(fields: [academicYearId], references: [id])
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([studentId, subjectId, title, academicYearId])
+  @@unique([studentId, classSubjectId, title, academicYearId])
   @@index([studentId])
-  @@index([subjectId])
+  @@index([classSubjectId])
   @@map("grades")
 }
 
 model Assignment {
-  id             String   @id @default(cuid())
-  title          String
-  description    String?
-  subjectId      String
-  teacherId      String
-  classId        String
-  dueDate        DateTime
-  academicYearId String
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  classSubjectId   String
+  classTeacherId   String
+  subjectTeacherId String
+  dueDate          DateTime
+  academicYearId   String
 
-  teacher            Teacher             @relation(fields: [teacherId], references: [id])
-  subject            Subject             @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  class              Class               @relation(fields: [classId], references: [id])
+  class              ClassSubject        @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  subject            SubjectTeacher      @relation(fields: [subjectTeacherId], references: [id], onDelete: Cascade)
+  teacher            ClassTeacher        @relation(fields: [classTeacherId], references: [id], onDelete: Cascade)
   academicYear       AcademicYear        @relation(fields: [academicYearId], references: [id])
   grades             Grade[]
   assignmentStudents AssignmentStudent[]
@@ -359,26 +362,26 @@ model AssignmentStudent {
 }
 
 model Exam {
-  id             String   @id @default(cuid())
-  title          String
-  description    String?
-  subjectId      String
-  teacherId      String
-  classId        String
-  examDate       DateTime
-  academicYearId String
+  id               String   @id @default(cuid())
+  title            String
+  description      String?
+  classSubjectId   String
+  classTeacherId   String
+  subjectTeacherId String
+  examDate         DateTime
+  academicYearId   String
 
-  subject      Subject       @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  teacher      Teacher       @relation(fields: [teacherId], references: [id])
-  class        Class         @relation(fields: [classId], references: [id])
-  academicYear AcademicYear  @relation(fields: [academicYearId], references: [id])
+  class        ClassSubject   @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  subject      SubjectTeacher @relation(fields: [subjectTeacherId], references: [id], onDelete: Cascade)
+  teacher      ClassTeacher   @relation(fields: [classTeacherId], references: [id], onDelete: Cascade)
+  academicYear AcademicYear   @relation(fields: [academicYearId], references: [id])
   grades       Grade[]
   examStudents ExamStudent[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([title, subjectId, classId, academicYearId])
+  @@unique([title, classSubjectId, academicYearId])
   @@index([examDate])
   @@map("exams")
 }
@@ -396,23 +399,24 @@ model ExamStudent {
 }
 
 model Schedule {
-  id        String    @id @default(cuid())
-  classId   String
-  subjectId String
-  teacherId String
-  dayOfWeek DayOfWeek
-  startTime String // "09:00"
-  endTime   String // "10:00"
+  id               String    @id @default(cuid())
+  classSubjectId   String
+  classTeacherId   String
+  subjectTeacherId String
+  dayOfWeek        DayOfWeek
+  startTime        String // "09:00"
+  endTime          String // "10:00"
 
-  class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
-  subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+  class   ClassSubject   @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
+  subject SubjectTeacher @relation(fields: [subjectTeacherId], references: [id], onDelete: Cascade)
+  teacher ClassTeacher   @relation(fields: [classTeacherId], references: [id], onDelete: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([classId, dayOfWeek, startTime])
-  @@unique([teacherId, dayOfWeek, startTime])
+  @@unique([classSubjectId, dayOfWeek, startTime])
+  @@unique([subjectTeacherId, dayOfWeek, startTime])
+  @@unique([classTeacherId, dayOfWeek, startTime])
   @@index([startTime])
   @@map("schedules")
 }

@@ -1,5 +1,6 @@
 "use server";
 
+import { cache } from "react";
 import z from "zod";
 
 import { Prisma } from "@/prisma/client";
@@ -17,7 +18,9 @@ import {
 type CreateClassParams = z.infer<typeof ClassSchema>;
 type UpdateClassParams = z.infer<typeof UpdateClassSchema>;
 
-export async function getClasses(params: PaginatedSearchParams): Promise<
+export const getClasses = cache(async function getClasses(
+  params: PaginatedSearchParams,
+): Promise<
   ActionResponse<{
     classes: ClassDoc[];
     isNext: boolean;
@@ -102,7 +105,7 @@ export async function getClasses(params: PaginatedSearchParams): Promise<
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }
-}
+});
 
 export async function createClass(
   params: CreateClassParams,

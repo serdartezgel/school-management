@@ -1,29 +1,42 @@
-import Image from "next/image";
+import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
+
+interface StatCardProps {
+  title: string;
+  value: number;
+  description?: string;
+  color?: "green" | "red" | "yellow" | "blue" | "cyan" | "emerald";
+}
 
 const StatCard = ({
-  type,
-}: {
-  type: "admin" | "teacher" | "student" | "parent";
-}) => {
+  title,
+  value,
+  description,
+  color = "blue",
+}: StatCardProps) => {
+  const colorClasses: Record<string, string> = {
+    green: "text-green-600",
+    red: "text-red-600",
+    yellow: "text-yellow-600",
+    blue: "text-blue-600",
+    cyan: "text-cyan-600",
+    emerald: "text-emerald-600",
+  };
+
   return (
-    <div className="min-w-[130px] flex-1 rounded-2xl p-4 odd:bg-blue-300 even:bg-yellow-200 dark:odd:bg-indigo-800 dark:even:bg-amber-700">
-      <div className="flex items-center justify-between">
-        <span className="bg-background rounded-full px-2 py-1 text-[10px] text-green-600">
-          2025/26
-        </span>
-        <Image
-          src="/images/more.png"
-          alt="More"
-          width={20}
-          height={20}
-          className="dark:invert-100"
-        />
-      </div>
-      <h2 className="my-4 text-2xl font-semibold">100</h2>
-      <h3 className="text-sm font-medium text-gray-600 capitalize dark:text-gray-300">
-        {type}
-      </h3>
-    </div>
+    <Card className="min-w-[180px] flex-1">
+      <CardHeader>
+        <CardTitle className="font-medium capitalize">{title}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className={`text-2xl font-bold ${colorClasses[color]}`}>{value}</p>
+        {description && (
+          <p className="text-muted-foreground text-sm capitalize">
+            {description}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   );
 };
+
 export default StatCard;

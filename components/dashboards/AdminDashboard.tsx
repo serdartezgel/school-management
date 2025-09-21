@@ -7,13 +7,31 @@ const AdminDashboard = () => {
   return (
     <>
       <section className="flex flex-wrap justify-start gap-4 p-4 lg:justify-center">
-        <div className="flex w-sm gap-4">
-          <StatCard type="admin" />
-          <StatCard type="teacher" />
-        </div>
-        <div className="flex w-sm gap-4">
-          <StatCard type="student" />
-          <StatCard type="parent" />
+        <div className="grid w-full grid-cols-2 gap-4 xl:grid-cols-4">
+          <StatCard
+            title="Total"
+            value={1}
+            color="cyan"
+            description="Admin(s)"
+          />
+          <StatCard
+            title="Total"
+            value={50}
+            color="emerald"
+            description="Teacher(s)"
+          />
+          <StatCard
+            title="Total"
+            value={400}
+            color="cyan"
+            description="Student(s)"
+          />
+          <StatCard
+            title="Total"
+            value={300}
+            color="emerald"
+            description="Parent(s)"
+          />
         </div>
       </section>
 
