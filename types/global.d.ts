@@ -29,6 +29,8 @@ interface PaginatedSearchParams {
   filterBy?: string;
   sort?: SortOrder | undefined;
   sortBy?: string;
+  filterByClass?: string;
+  filterBySubject?: string;
 }
 
 type FormDataMap = {

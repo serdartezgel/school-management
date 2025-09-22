@@ -34,67 +34,66 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
     query,
     sort = "desc",
     sortBy = "date",
-    filter = "all",
-    filterBy,
+    filterByClass,
+    filterBySubject,
   } = validationResult.params!;
 
   const skip = (Number(page) - 1) * Number(pageSize);
   const take = Number(pageSize);
 
-  let where: Prisma.AttendanceWhereInput = {};
+  // Start building where conditions
+  const filterConditions: Prisma.AttendanceWhereInput[] = [];
 
+  // Query search
   if (query) {
-    where.OR = [
-      {
-        student: {
-          user: { name: { contains: query, mode: "insensitive" } },
+    filterConditions.push({
+      OR: [
+        {
+          student: { user: { name: { contains: query, mode: "insensitive" } } },
         },
-      },
-      {
-        teacher: {
+        {
           teacher: {
-            user: { name: { contains: query, mode: "insensitive" } },
+            teacher: {
+              user: { name: { contains: query, mode: "insensitive" } },
+            },
           },
         },
-      },
-      {
-        classSubject: {
-          class: { name: { contains: query, mode: "insensitive" } },
+        {
+          classSubject: {
+            class: { name: { contains: query, mode: "insensitive" } },
+          },
         },
-      },
-      {
-        classSubject: {
-          subject: { name: { contains: query, mode: "insensitive" } },
+        {
+          classSubject: {
+            subject: { name: { contains: query, mode: "insensitive" } },
+          },
         },
-      },
-      {
-        academicYear: { year: { contains: query, mode: "insensitive" } },
-      },
-    ];
+        { academicYear: { year: { contains: query, mode: "insensitive" } } },
+      ],
+    });
   }
 
-  if (filter && filterBy && filter !== "all") {
-    const filterCondition: Prisma.AttendanceWhereInput =
-      filterBy === "classes"
-        ? {
-            classSubject: {
-              class: { name: { contains: filter, mode: "insensitive" } },
-            },
-          }
-        : filterBy === "subjects"
-          ? {
-              classSubject: {
-                subject: { name: { contains: filter, mode: "insensitive" } },
-              },
-            }
-          : {};
-    const existingAnd = Array.isArray(where.AND)
-      ? where.AND
-      : where.AND
-        ? [where.AND]
-        : [];
-    where = { ...where, AND: [...existingAnd, filterCondition] };
+  // Filter by class
+  if (filterByClass && filterByClass !== "all") {
+    filterConditions.push({
+      classSubject: {
+        class: { name: { contains: filterByClass, mode: "insensitive" } },
+      },
+    });
   }
+
+  // Filter by subject
+  if (filterBySubject && filterBySubject !== "all") {
+    filterConditions.push({
+      classSubject: {
+        subject: { name: { contains: filterBySubject, mode: "insensitive" } },
+      },
+    });
+  }
+
+  // Merge all filters into `AND`
+  const where: Prisma.AttendanceWhereInput =
+    filterConditions.length > 0 ? { AND: filterConditions } : {};
 
   // Sorting logic
   let orderBy: Prisma.AttendanceOrderByWithRelationInput;

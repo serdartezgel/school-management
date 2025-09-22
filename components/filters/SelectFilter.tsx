@@ -85,7 +85,9 @@ const SelectFilter = ({
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">All {filterBy}</SelectItem>
+          <SelectItem value="all">
+            All {filterBy === "filterByClass" ? "Classes" : "Subjects"}
+          </SelectItem>
           {data.map((obj) => (
             <SelectItem key={obj.id} value={obj.name}>
               {obj.name}

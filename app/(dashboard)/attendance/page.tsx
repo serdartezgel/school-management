@@ -1,3 +1,4 @@
+import { parse } from "date-fns";
 import { redirect } from "next/navigation";
 
 import { auth } from "@/auth";
@@ -20,8 +21,21 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
 
   const role = session.user.role;
 
-  const { page, pageSize, query, sort, date, filter, filterBy } =
-    await searchParams;
+  const {
+    page,
+    pageSize,
+    query,
+    sort,
+    date: dateStr,
+    filterByClass = "all",
+    filterBySubject = "all",
+  } = await searchParams;
+
+  let date = new Date();
+  if (dateStr) {
+    date = parse(dateStr, "dd.MM.yyyy", new Date());
+  }
+  console.log(date);
 
   const [classes, subjects] = await Promise.all([
     getClasses({ page: 1, pageSize: 100 }),
@@ -34,12 +48,12 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
       pageSize: Number(pageSize) || 10,
       query,
       sort: sort || "desc",
-      sortBy: date,
-      filter: filter || "all",
-      filterBy,
+      sortBy: dateStr,
+      filterByClass,
+      filterBySubject,
     }),
     getAttendanceNumbers({
-      date: new Date(date) || new Date(),
+      date: date || new Date(),
     }),
   ]);
 
@@ -83,13 +97,13 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
         <div className="flex gap-2">
           <SelectFilter
             placeholder="Select Class"
-            filterBy="classes"
+            filterBy="filterByClass"
             route="/attendance"
             data={classes.data?.classes || []}
           />
           <SelectFilter
             placeholder="Select Subject"
-            filterBy="subjects"
+            filterBy="filterBySubject"
             route="/attendance"
             data={subjects.data?.subjects || []}
           />
