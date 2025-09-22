@@ -31,6 +31,7 @@ interface PaginatedSearchParams {
   sortBy?: string;
   filterByClass?: string;
   filterBySubject?: string;
+  date?: Date;
 }
 
 type FormDataMap = {

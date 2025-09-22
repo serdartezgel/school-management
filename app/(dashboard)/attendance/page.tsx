@@ -33,7 +33,7 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
 
   let date = new Date();
   if (dateStr) {
-    date = parse(dateStr, "dd.MM.yyyy", new Date());
+    date = parse(dateStr, "EEE MMM dd yyyy", new Date());
   }
   console.log(date);
 
@@ -46,6 +46,7 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
     getAttendances({
       page: Number(page) || 1,
       pageSize: Number(pageSize) || 10,
+      date,
       query,
       sort: sort || "desc",
       sortBy: dateStr,

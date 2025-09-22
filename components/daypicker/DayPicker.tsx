@@ -29,8 +29,8 @@ const DayPicker = ({ route }: { route: string }) => {
   const [searchQuery, setSearchQuery] = useState(today);
 
   const dateValue =
-    searchQuery.toLocaleDateString() !== today.toLocaleDateString()
-      ? searchQuery.toLocaleDateString()
+    searchQuery.toDateString() !== today.toDateString()
+      ? searchQuery.toDateString()
       : null;
 
   useEffect(() => {

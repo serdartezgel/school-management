@@ -32,6 +32,7 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
     page = 1,
     pageSize = 10,
     query,
+    date,
     sort = "desc",
     sortBy = "date",
     filterByClass,
@@ -88,6 +89,18 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
       classSubject: {
         subject: { name: { contains: filterBySubject, mode: "insensitive" } },
       },
+    });
+  }
+
+  // Filter by date
+  if (date) {
+    const startOfDay = new Date(date);
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date(date);
+    endOfDay.setHours(23, 59, 59, 999);
+    filterConditions.push({
+      date: { gte: startOfDay, lte: endOfDay },
     });
   }
 

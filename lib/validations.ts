@@ -24,6 +24,7 @@ export const PaginatedSearchParamsSchema = z.object({
   sortBy: z.string().optional(),
   filterByClass: z.string().optional(),
   filterBySubject: z.string().optional(),
+  date: z.date().optional(),
 });
 
 export const TeacherSchema = z.object({
