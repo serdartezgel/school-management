@@ -31,7 +31,7 @@ const DayPicker = ({ route }: { route: string }) => {
   const dateValue =
     searchQuery.toDateString() !== today.toDateString()
       ? searchQuery.toDateString()
-      : null;
+      : "";
 
   useEffect(() => {
     if (dateValue) {

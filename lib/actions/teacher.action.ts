@@ -78,6 +78,8 @@ export async function getTeachers(params: PaginatedSearchParams): Promise<
       take,
       include: {
         user: true,
+        classes: { include: { class: true } },
+        subjects: { include: { subject: true } },
       },
     });
 

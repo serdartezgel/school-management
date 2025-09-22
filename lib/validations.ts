@@ -1,5 +1,7 @@
 import z from "zod";
 
+import { AttendanceStatus } from "@/prisma/client";
+
 export const SignInSchema = z.object({
   username: z
     .string()
@@ -187,4 +189,13 @@ export const UpdateSubjectSchema = SubjectSchema.partial().extend({
 
 export const GetAttendanceNumbersSchema = z.object({
   date: z.date(),
+});
+
+export const AttendanceSchema = z.object({
+  studentId: z.string().min(1, "Student ID is required."),
+  classSubjectId: z.string().min(1, "classSubjectId is required."),
+  classTeacherId: z.string().min(1, "classSubjectId is required."),
+  date: z.date({ error: "Date is required." }),
+  academicYearId: z.string().min(1, "Invalid academic year id."),
+  status: z.enum(AttendanceStatus),
 });

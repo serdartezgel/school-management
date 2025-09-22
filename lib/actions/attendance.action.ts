@@ -1,11 +1,16 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+import z from "zod";
+
 import { Prisma } from "@/prisma/client";
 
 import action from "../handlers/action";
 import handleError from "../handlers/error";
+import { UnauthorizedError } from "../http-errors";
 import dbConnect from "../prisma";
 import {
+  AttendanceSchema,
   GetAttendanceNumbersSchema,
   PaginatedSearchParamsSchema,
 } from "../validations";
@@ -110,9 +115,8 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
 
   // Sorting logic
   let orderBy: Prisma.AttendanceOrderByWithRelationInput;
-  if (sortBy === "date" || sortBy === "status") {
-    orderBy = { [sortBy]: sort };
-  } else if (sortBy === "student") {
+
+  if (sortBy === "student") {
     orderBy = { student: { user: { name: sort } } };
   } else if (sortBy === "class") {
     orderBy = { classSubject: { class: { name: sort } } };
@@ -213,6 +217,83 @@ export async function getAttendanceNumbers(
       data: numbers,
     };
   } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+type UpdateAttendanceParams = z.infer<typeof AttendanceSchema>;
+
+export async function updateAttendanceStatus(
+  params: UpdateAttendanceParams,
+): Promise<ActionResponse<AttendanceDoc>> {
+  const validationResult = await action({
+    params,
+    schema: AttendanceSchema,
+    authorize: true,
+  });
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const {
+    studentId,
+    classSubjectId,
+    classTeacherId,
+    date,
+    status,
+    academicYearId,
+  } = validationResult.params!;
+
+  if (validationResult.session?.user.role !== "ADMIN")
+    throw new UnauthorizedError("You do not have permission to create a class");
+
+  const attendanceDate = new Date(date);
+  attendanceDate.setHours(0, 0, 0, 0);
+
+  const prisma = await dbConnect();
+
+  try {
+    const attendance = await prisma.attendance.upsert({
+      where: {
+        studentId_classSubjectId_date: {
+          studentId,
+          classSubjectId,
+          date: attendanceDate,
+        },
+      },
+      update: {
+        status,
+      },
+      create: {
+        studentId,
+        classSubjectId,
+        classTeacherId,
+        date: attendanceDate,
+        status,
+        academicYearId,
+      },
+    });
+
+    revalidatePath("/attendances");
+
+    return { success: true, data: attendance };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        const fields = error.meta?.target as string[];
+        return {
+          success: false,
+          error: {
+            message: "Unique constraint failed",
+            details: Object.fromEntries(
+              fields.map((f) => [f, [`${f} must be unique`]]),
+            ),
+          },
+          status: 400,
+        } satisfies ErrorResponse;
+      }
+    }
     return handleError(error) as ErrorResponse;
   }
 }

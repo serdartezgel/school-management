@@ -18,6 +18,7 @@ import {
 import { formUrlQuery } from "@/lib/url";
 
 import FormContainer from "../forms/FormContainer";
+import { AttendanceStatusSelect } from "./cells/AttendanceStatusSelect";
 
 export const getTeacherColumns = (
   role: string,
@@ -36,7 +37,7 @@ export const getTeacherColumns = (
           width={32}
           height={32}
           className="rounded-full object-contain"
-        ></Image>
+        />
       </div>
     ),
   },
@@ -63,7 +64,10 @@ export const getTeacherColumns = (
       );
     },
     cell: ({ row }) => (
-      <Link href={`/teachers/${row.original.userId}`}>
+      <Link
+        href={`/teachers/${row.original.userId}`}
+        className="hover:underline"
+      >
         {row.original.user.name}
       </Link>
     ),
@@ -83,10 +87,48 @@ export const getTeacherColumns = (
   {
     accessorKey: "subjects",
     header: "Subjects",
+    cell: ({ row }) => {
+      const subjects = row.original.subjects || [];
+
+      if (subjects.length === 0)
+        return <span className="text-gray-500">No subject</span>;
+      return (
+        <div className="flex flex-col gap-1">
+          {subjects.map((subject: SubjectDoc) => (
+            <Link
+              href={`/subjects/${subject.id}`}
+              key={subject.id}
+              className="hover:underline"
+            >
+              {subject.subject.name}
+            </Link>
+          ))}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "classes",
     header: "Classes",
+    cell: ({ row }) => {
+      const classes = row.original.classes || [];
+
+      if (classes.length === 0)
+        return <span className="text-gray-500">No subject</span>;
+      return (
+        <div className="flex flex-col gap-1">
+          {classes.map((classData: ClassDoc) => (
+            <Link
+              href={`/classes/${classData.id}`}
+              key={classData.id}
+              className="hover:underline"
+            >
+              {classData.class.name}
+            </Link>
+          ))}
+        </div>
+      );
+    },
   },
   ...(role === "ADMIN"
     ? [
@@ -153,7 +195,7 @@ export const getStudentColumns = (
           width={32}
           height={32}
           className="rounded-full object-contain"
-        ></Image>
+        />
       </div>
     ),
   },
@@ -180,7 +222,10 @@ export const getStudentColumns = (
       );
     },
     cell: ({ row }) => (
-      <Link href={`/students/${row.original.userId}`}>
+      <Link
+        href={`/students/${row.original.userId}`}
+        className="hover:underline"
+      >
         {row.original.user.name}
       </Link>
     ),
@@ -198,7 +243,10 @@ export const getStudentColumns = (
     id: "class",
     header: "Class",
     cell: ({ row }) => (
-      <Link href={`/classes/${row.original.class.id}`}>
+      <Link
+        href={`/classes/${row.original.class.id}`}
+        className="hover:underline"
+      >
         {row.original.class.name}
       </Link>
     ),
@@ -208,7 +256,10 @@ export const getStudentColumns = (
     id: "parentName",
     header: "Parent Name",
     cell: ({ row }) => (
-      <Link href={`/students/${row.original.userId}`}>
+      <Link
+        href={`/students/${row.original.userId}`}
+        className="hover:underline"
+      >
         {row.original.user.name}
       </Link>
     ),
@@ -310,7 +361,9 @@ export const getClassColumns = (
       id: "name",
       header: () => makeSortableHeader("name", "Name"),
       cell: ({ row }) => (
-        <Link href={`/classes/${row.original.id}`}>{row.original.name}</Link>
+        <Link href={`/classes/${row.original.id}`} className="hover:underline">
+          {row.original.name}
+        </Link>
       ),
     },
     {
@@ -387,7 +440,7 @@ export const getParentColumns = (
           width={32}
           height={32}
           className="rounded-full object-contain"
-        ></Image>
+        />
       </div>
     ),
   },
@@ -414,7 +467,10 @@ export const getParentColumns = (
       );
     },
     cell: ({ row }) => (
-      <Link href={`/parents/${row.original.userId}`}>
+      <Link
+        href={`/parents/${row.original.userId}`}
+        className="hover:underline"
+      >
         {row.original.user.name}
       </Link>
     ),
@@ -537,7 +593,9 @@ export const getSubjectColumns = (
       id: "name",
       header: () => makeSortableHeader("name", "Name"),
       cell: ({ row }) => (
-        <Link href={`/subjects/${row.original.id}`}>{row.original.name}</Link>
+        <Link href={`/subjects/${row.original.id}`} className="hover:underline">
+          {row.original.name}
+        </Link>
       ),
     },
     {
@@ -641,7 +699,7 @@ export const getAttendanceColumns = (
             width={32}
             height={32}
             className="rounded-full object-contain"
-          ></Image>
+          />
         </div>
       ),
     },
@@ -659,14 +717,17 @@ export const getAttendanceColumns = (
       ),
     },
     {
-      accessorKey: "student.id",
+      accessorKey: "student.studentId",
       header: "Student ID",
     },
     {
       accessorKey: "classSubject.class.name",
       header: () => makeSortableHeader("class", "Class"),
       cell: ({ row }) => (
-        <Link href={`/classes/${row.original.classSubject.class.id}`}>
+        <Link
+          href={`/classes/${row.original.classSubject.class.id}`}
+          className="hover:underline"
+        >
           {row.original.classSubject.class.name}
         </Link>
       ),
@@ -674,10 +735,31 @@ export const getAttendanceColumns = (
     {
       accessorKey: "classSubject.subject.name",
       header: () => makeSortableHeader("subject", "Subject"),
+      cell: ({ row }) => (
+        <Link
+          href={`/subjects/${row.original.classSubject.subject.id}`}
+          className="hover:underline"
+        >
+          {row.original.classSubject.subject.name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "teacher.teacher.user.name",
+      header: () => makeSortableHeader("teacher", "Teacher"),
+      cell: ({ row }) => (
+        <Link
+          href={`/teachers/${row.original.teacher.teacher.id}`}
+          className="hover:underline"
+        >
+          {row.original.teacher.teacher.user.name}
+        </Link>
+      ),
     },
     {
       accessorKey: "status",
-      header: () => makeSortableHeader("status", "Attendance Status"),
+      header: "Attendance Status",
+      cell: ({ row }) => <AttendanceStatusSelect attendance={row.original} />,
     },
     {
       accessorKey: "remarks",
