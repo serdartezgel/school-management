@@ -71,8 +71,6 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
     }),
   ]);
 
-  console.log(result);
-
   return (
     <div className="mt-16 flex flex-col gap-4 p-4">
       <section className="flex flex-col justify-between gap-4 pb-4 sm:flex-row">
@@ -112,15 +110,14 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
 
       <section className="flex w-full items-center justify-start gap-4 pb-4">
         <Suspense fallback={<div>Loading...</div>}>
-          {role === "ADMIN" ||
-            (role === "TEACHER" && (
-              <SelectFilter
-                placeholder="Select Class"
-                filterBy="filterByClass"
-                route="/attendance"
-                data={classes.data?.classes || []}
-              />
-            ))}
+          {(role === "ADMIN" || role === "TEACHER") && (
+            <SelectFilter
+              placeholder="Select Class"
+              filterBy="filterByClass"
+              route="/attendance"
+              data={classes.data?.classes || []}
+            />
+          )}
           <SelectFilter
             placeholder="Select Subject"
             filterBy="filterBySubject"

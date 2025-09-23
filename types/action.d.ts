@@ -110,4 +110,18 @@ declare global {
     userId?: string;
     role?: Role;
   }
+
+  type ExamDoc = Prisma.ExamGetPayload<{
+    include: {
+      examStudents: true;
+      grades: true;
+    };
+  }>;
+
+  type ExamStudentDoc = Prisma.ExamStudentGetPayload<{
+    include: {
+      exam: true;
+      student: { include: { user: true } };
+    };
+  }>;
 }

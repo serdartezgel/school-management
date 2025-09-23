@@ -246,8 +246,7 @@ async function main() {
           title: `Exam ${idx + 1}`,
           description: faker.lorem.sentence(),
           classSubjectId: cs.id,
-          classTeacherId: classTeachers[idx % classTeachers.length].id,
-          subjectTeacherId: subjectTeachers[idx % subjectTeachers.length].id,
+          teacherId: teachers[idx % teachers.length].id,
           examDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           academicYearId: academicYear.id,
         },
@@ -255,30 +254,16 @@ async function main() {
     ),
   );
 
-  // ---------- ExamStudents ----------
+  // ---------- ExamStudents + Grades ----------
   await Promise.all(
     students.flatMap((stu) =>
-      exams.map((exam) =>
-        prisma.examStudent.create({
-          data: {
-            examId: exam.id,
-            studentId: stu.id,
-            status: ExamStatus.PENDING,
-          },
-        }),
-      ),
-    ),
-  );
-
-  // ---------- Grades ----------
-  await Promise.all(
-    students.flatMap((stu) =>
-      classSubjects.map((cs, idx) =>
-        prisma.grade.create({
+      exams.map(async (exam, idx) => {
+        // create grade first
+        const grade = await prisma.grade.create({
           data: {
             studentId: stu.id,
-            classSubjectId: cs.id,
-            subjectTeacherId: subjectTeachers[idx % subjectTeachers.length].id,
+            classSubjectId: classSubjects[idx % classSubjects.length].id,
+            teacherId: teachers[idx % teachers.length].id,
             type: GradeType.ASSIGNMENT,
             title: `Quiz ${idx + 1}`,
             score: faker.number.int({ min: 50, max: 100 }),
@@ -287,8 +272,18 @@ async function main() {
             examDate: new Date(),
             academicYearId: academicYear.id,
           },
-        }),
-      ),
+        });
+
+        // create ExamStudent and link grade
+        return prisma.examStudent.create({
+          data: {
+            examId: exam.id,
+            studentId: stu.id,
+            gradeId: grade.id,
+            status: ExamStatus.PENDING,
+          },
+        });
+      }),
     ),
   );
 

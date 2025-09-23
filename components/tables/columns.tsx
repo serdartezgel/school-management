@@ -784,3 +784,119 @@ export const getAttendanceColumns = (
     },
   ];
 };
+
+export const getExamColumns = (
+  role: string,
+  searchParams: ReadonlyURLSearchParams,
+  pathname: string,
+): ColumnDef<ExamDoc>[] => {
+  const makeSortableHeader = (key: string, label: string) => {
+    const currentSort = searchParams.get("sort") || "asc";
+    const currentSortBy = searchParams.get("sortBy") || "name";
+
+    const newUrl = formUrlQuery({
+      params: searchParams.toString(),
+      key: "sort",
+      value: currentSortBy === key && currentSort === "asc" ? "desc" : "asc",
+      pathname,
+    });
+
+    const urlWithSortBy = formUrlQuery({
+      params: newUrl.split("?")[1],
+      key: "sortBy",
+      value: key,
+      pathname,
+    });
+
+    return (
+      <Link href={urlWithSortBy}>
+        <Button
+          variant={"ghost"}
+          className="w-full cursor-pointer justify-between !pl-0"
+        >
+          {label}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  };
+  return [
+    {
+      accessorFn: (row) => row.student.user.image,
+      id: "image",
+      header: "Image",
+      cell: ({ row }) => (
+        <div className="flex items-center justify-center">
+          <Image
+            src={row.original.student.user.image || "/images/noAvatar.png"}
+            alt={row.original.student.user.name || ""}
+            width={32}
+            height={32}
+            className="rounded-full object-contain"
+          />
+        </div>
+      ),
+    },
+    {
+      accessorFn: (row) => row.student.user.name,
+      id: "name",
+      header: () => makeSortableHeader("name", "Name"),
+      cell: ({ row }) => (
+        <Link
+          href={`/students/${row.original.student.user.id}`}
+          className="underline"
+        >
+          {row.original.student.user.name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "exam.title",
+      header: "Exam Title",
+    },
+    {
+      accessorKey: "exam.classSubject.class.name",
+      header: () => makeSortableHeader("class", "Class"),
+      cell: ({ row }) => (
+        <Link
+          href={`/classes/${row.original.exam.classSubject.class.id}`}
+          className="hover:underline"
+        >
+          {row.original.exam.classSubject.class.name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "exam.classSubject.subject.name",
+      header: () => makeSortableHeader("subject", "Subject"),
+      cell: ({ row }) => (
+        <Link
+          href={`/subjects/${row.original.exam.classSubject.subject.id}`}
+          className="hover:underline"
+        >
+          {row.original.exam.classSubject.subject.name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "exam.teacher.user.name",
+      header: () => makeSortableHeader("teacher", "Teacher"),
+      cell: ({ row }) => (
+        <Link
+          href={`/teachers/${row.original.exam.teacher.id}`}
+          className="hover:underline"
+        >
+          {row.original.exam.teacher.user.name}
+        </Link>
+      ),
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+    },
+    {
+      accessorKey: "grade.score",
+      header: "Grade",
+    },
+  ];
+};

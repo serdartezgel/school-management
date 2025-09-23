@@ -2,6 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { toast } from "sonner";
 
 import {
   Select,
@@ -41,7 +42,7 @@ export const AttendanceStatusSelect = ({
 
   const handleChange = async (newStatus: AttendanceStatus) => {
     try {
-      const result = await updateAttendanceStatus({
+      await updateAttendanceStatus({
         studentId: attendance.id,
         classSubjectId: attendance.classSubject.id,
         date: attendanceDate,
@@ -49,9 +50,12 @@ export const AttendanceStatusSelect = ({
         status: newStatus,
       });
       setStatus(newStatus);
-      console.log(result);
+      toast.success("Succes", {
+        description: "Attendance updated successfully.",
+      });
     } catch (error) {
-      console.error("Failed to update attendance:", error);
+      toast.error("Failed", { description: "Operation failed." });
+      console.log(error);
       setStatus(attendance.attendanceStatus);
     }
   };

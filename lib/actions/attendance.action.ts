@@ -328,7 +328,6 @@ export async function updateAttendanceStatus(
         academicYearId,
       },
     });
-    console.log(attendance);
     revalidatePath("/attendances");
 
     return { success: true, data: attendance };
