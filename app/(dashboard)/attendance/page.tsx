@@ -1,9 +1,10 @@
 import { parse } from "date-fns";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 
 import { auth } from "@/auth";
 import StatCard from "@/components/cards/StatCard";
-import DayPickerWrapper from "@/components/daypicker/DayPickerWrapper";
+import DayPicker from "@/components/daypicker/DayPicker";
 import SelectFilter from "@/components/filters/SelectFilter";
 import LocalSearch from "@/components/search/LocalSearch";
 import AttendanceTable from "@/components/tables/AttendanceTable";
@@ -26,6 +27,7 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
     pageSize,
     query,
     sort,
+    sortBy = "class",
     date: dateStr,
     filterByClass = "all",
     filterBySubject = "all",
@@ -35,7 +37,6 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
   if (dateStr) {
     date = parse(dateStr, "EEE MMM dd yyyy", new Date());
   }
-  console.log(date);
 
   const [classes, subjects] = await Promise.all([
     getClasses({ page: 1, pageSize: 100 }),
@@ -48,8 +49,8 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
       pageSize: Number(pageSize) || 10,
       date,
       query,
-      sort: sort || "desc",
-      sortBy: dateStr,
+      sort: sort || "asc",
+      sortBy,
       filterByClass,
       filterBySubject,
     }),
@@ -58,12 +59,16 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
     }),
   ]);
 
+  console.log(result);
+
   return (
     <div className="mt-16 flex flex-col gap-4 p-4">
       <section className="flex flex-col justify-between gap-4 pb-4 sm:flex-row">
         <h1 className="text-2xl font-bold">Attendances</h1>
         <Separator orientation="vertical" />
-        <DayPickerWrapper route="/attendance" />
+        <Suspense fallback={<div>Loading...</div>}>
+          <DayPicker route="/attendance" />
+        </Suspense>
       </section>
 
       <section className="grid grid-cols-1 gap-4 pb-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -96,23 +101,27 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
       <section className="flex w-full flex-col items-center justify-between gap-4 pb-4 lg:flex-row">
         <LocalSearch route={"/attendance"} />
         <div className="flex gap-2">
-          <SelectFilter
-            placeholder="Select Class"
-            filterBy="filterByClass"
-            route="/attendance"
-            data={classes.data?.classes || []}
-          />
-          <SelectFilter
-            placeholder="Select Subject"
-            filterBy="filterBySubject"
-            route="/attendance"
-            data={subjects.data?.subjects || []}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <SelectFilter
+              placeholder="Select Class"
+              filterBy="filterByClass"
+              route="/attendance"
+              data={classes.data?.classes || []}
+            />
+            <SelectFilter
+              placeholder="Select Subject"
+              filterBy="filterBySubject"
+              route="/attendance"
+              data={subjects.data?.subjects || []}
+            />
+          </Suspense>
         </div>
       </section>
 
       <section>
-        <AttendanceTable role={role} data={result.data!} />
+        <Suspense fallback={<div>Loading...</div>}>
+          <AttendanceTable role={role} data={result.data!} />
+        </Suspense>
       </section>
     </div>
   );

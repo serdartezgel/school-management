@@ -152,9 +152,13 @@ async function main() {
   // ---------- ClassSubjects ----------
   const classSubjects = await Promise.all(
     classes.flatMap((cls) =>
-      subjects.map((sub) =>
+      subjects.map((sub, idx) =>
         prisma.classSubject.create({
-          data: { classId: cls.id, subjectId: sub.id },
+          data: {
+            classId: cls.id,
+            subjectId: sub.id,
+            teacherId: teachers[idx % teachers.length].id,
+          },
         }),
       ),
     ),
@@ -193,7 +197,6 @@ async function main() {
           data: {
             studentId: stu.id,
             classSubjectId: cs.id,
-            classTeacherId: classTeachers[0].id,
             date: new Date(),
             status: AttendanceStatus.PRESENT,
             academicYearId: academicYear.id,
@@ -211,8 +214,8 @@ async function main() {
           title: `Assignment ${idx + 1}`,
           description: faker.lorem.sentence(),
           classSubjectId: cs.id,
-          classTeacherId: classTeachers[0].id,
-          subjectTeacherId: subjectTeachers[0].id,
+          classTeacherId: classTeachers[idx % classTeachers.length].id,
+          subjectTeacherId: subjectTeachers[idx % subjectTeachers.length].id,
           dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           academicYearId: academicYear.id,
         },
@@ -243,8 +246,8 @@ async function main() {
           title: `Exam ${idx + 1}`,
           description: faker.lorem.sentence(),
           classSubjectId: cs.id,
-          classTeacherId: classTeachers[0].id,
-          subjectTeacherId: subjectTeachers[0].id,
+          classTeacherId: classTeachers[idx % classTeachers.length].id,
+          subjectTeacherId: subjectTeachers[idx % subjectTeachers.length].id,
           examDate: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000),
           academicYearId: academicYear.id,
         },
@@ -275,7 +278,7 @@ async function main() {
           data: {
             studentId: stu.id,
             classSubjectId: cs.id,
-            subjectTeacherId: subjectTeachers[0].id,
+            subjectTeacherId: subjectTeachers[idx % subjectTeachers.length].id,
             type: GradeType.ASSIGNMENT,
             title: `Quiz ${idx + 1}`,
             score: faker.number.int({ min: 50, max: 100 }),
@@ -325,63 +328,6 @@ async function main() {
           });
         })
         .filter(Boolean),
-    ),
-  );
-
-  // ---------- Events ----------
-  const events = await Promise.all(
-    Array.from({ length: 2 }).map((_, idx) =>
-      prisma.event.create({
-        data: {
-          title: `Event ${idx + 1}`,
-          description: faker.lorem.sentence(),
-          startDate: new Date(),
-          endDate: new Date(Date.now() + 1 * 60 * 60 * 1000),
-          isImportant: idx % 2 === 0,
-        },
-      }),
-    ),
-  );
-
-  // ---------- EventClasses ----------
-  await Promise.all(
-    events.flatMap((event) =>
-      classes.map((cls) =>
-        prisma.eventClass.create({
-          data: {
-            eventId: event.id,
-            classId: cls.id,
-          },
-        }),
-      ),
-    ),
-  );
-
-  // ---------- Announcements ----------
-  const announcements = await Promise.all(
-    Array.from({ length: 2 }).map((_, idx) =>
-      prisma.announcement.create({
-        data: {
-          title: `Announcement ${idx + 1}`,
-          content: faker.lorem.sentence(),
-          isImportant: idx % 2 === 0,
-          publishDate: new Date(),
-          expiryDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-        },
-      }),
-    ),
-  );
-
-  await Promise.all(
-    announcements.flatMap((ann) =>
-      classes.map((cls) =>
-        prisma.announcementClass.create({
-          data: {
-            announcementId: ann.id,
-            classId: cls.id,
-          },
-        }),
-      ),
     ),
   );
 

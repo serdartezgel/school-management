@@ -1,5 +1,6 @@
 "use client";
 
+import { useSearchParams } from "next/navigation";
 import { useState } from "react";
 
 import {
@@ -19,7 +20,13 @@ interface AttendanceStatusSelectProps {
 export const AttendanceStatusSelect = ({
   attendance,
 }: AttendanceStatusSelectProps) => {
-  const [status, setStatus] = useState(attendance.status);
+  const searchParams = useSearchParams();
+  const dateParam = searchParams.get("date");
+
+  const attendanceDate = dateParam ? new Date(dateParam) : new Date();
+  attendanceDate.setHours(0, 0, 0, 0);
+
+  const [status, setStatus] = useState(attendance.attendanceStatus);
 
   const statusColors: Record<string, string> = {
     PRESENT:
@@ -29,28 +36,29 @@ export const AttendanceStatusSelect = ({
     LATE: "bg-yellow-100 text-yellow-800 hover:!bg-yellow-200 focus:!bg-yellow-200 focus:!text-yellow-800",
     EXCUSED:
       "bg-blue-100 text-blue-800 hover:!bg-blue-200 focus:!bg-blue-200 focus:!text-blue-800",
+    PENDING: "",
   };
 
   const handleChange = async (newStatus: AttendanceStatus) => {
-    setStatus(newStatus);
     try {
-      await updateAttendanceStatus({
-        studentId: attendance.studentId,
-        classSubjectId: attendance.classSubjectId,
-        classTeacherId: attendance.classTeacherId,
-        date: attendance.date,
-        academicYearId: attendance.academicYearId,
+      const result = await updateAttendanceStatus({
+        studentId: attendance.id,
+        classSubjectId: attendance.classSubject.id,
+        date: attendanceDate,
+        academicYearId: attendance.classSubject.class.academicYearId,
         status: newStatus,
       });
+      setStatus(newStatus);
+      console.log(result);
     } catch (error) {
       console.error("Failed to update attendance:", error);
-      setStatus(attendance.status);
+      setStatus(attendance.attendanceStatus);
     }
   };
 
   return (
     <Select value={status} onValueChange={handleChange}>
-      <SelectTrigger className={`w-[120px] ${statusColors[status]}`}>
+      <SelectTrigger className={`w-[180px] ${statusColors[status]}`}>
         <SelectValue placeholder="Select Status" />
       </SelectTrigger>
       <SelectContent>

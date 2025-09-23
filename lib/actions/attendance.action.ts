@@ -17,9 +17,7 @@ import {
 
 export async function getAttendances(params: PaginatedSearchParams): Promise<
   ActionResponse<{
-    attendances: AttendanceDoc[];
-    isNext: boolean;
-    totalAttendances: number;
+    attendances: StudentWithAttendanceDoc[];
   }>
 > {
   const validationResult = await action({
@@ -34,47 +32,46 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
   }
 
   const {
-    page = 1,
-    pageSize = 10,
     query,
     date,
-    sort = "desc",
-    sortBy = "date",
+    sort = "asc",
+    sortBy = "class",
     filterByClass,
     filterBySubject,
   } = validationResult.params!;
 
-  const skip = (Number(page) - 1) * Number(pageSize);
-  const take = Number(pageSize);
-
   // Start building where conditions
-  const filterConditions: Prisma.AttendanceWhereInput[] = [];
+  const filterConditions: Prisma.ClassSubjectWhereInput[] = [];
 
   // Query search
   if (query) {
     filterConditions.push({
       OR: [
         {
-          student: { user: { name: { contains: query, mode: "insensitive" } } },
-        },
-        {
-          teacher: {
-            teacher: {
-              user: { name: { contains: query, mode: "insensitive" } },
+          class: {
+            students: {
+              some: {
+                user: { name: { contains: query, mode: "insensitive" } },
+              },
             },
           },
         },
         {
-          classSubject: {
-            class: { name: { contains: query, mode: "insensitive" } },
+          teacher: {
+            user: { name: { contains: query, mode: "insensitive" } },
           },
         },
         {
-          classSubject: {
-            subject: { name: { contains: query, mode: "insensitive" } },
+          class: { name: { contains: query, mode: "insensitive" } },
+        },
+        {
+          subject: { name: { contains: query, mode: "insensitive" } },
+        },
+        {
+          class: {
+            academicYear: { year: { contains: query, mode: "insensitive" } },
           },
         },
-        { academicYear: { year: { contains: query, mode: "insensitive" } } },
       ],
     });
   }
@@ -82,74 +79,80 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
   // Filter by class
   if (filterByClass && filterByClass !== "all") {
     filterConditions.push({
-      classSubject: {
-        class: { name: { contains: filterByClass, mode: "insensitive" } },
-      },
+      class: { name: { contains: filterByClass, mode: "insensitive" } },
     });
   }
 
   // Filter by subject
   if (filterBySubject && filterBySubject !== "all") {
     filterConditions.push({
-      classSubject: {
-        subject: { name: { contains: filterBySubject, mode: "insensitive" } },
-      },
-    });
-  }
-
-  // Filter by date
-  if (date) {
-    const startOfDay = new Date(date);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(date);
-    endOfDay.setHours(23, 59, 59, 999);
-    filterConditions.push({
-      date: { gte: startOfDay, lte: endOfDay },
+      subject: { name: { contains: filterBySubject, mode: "insensitive" } },
     });
   }
 
   // Merge all filters into `AND`
-  const where: Prisma.AttendanceWhereInput =
+  const where: Prisma.ClassSubjectWhereInput =
     filterConditions.length > 0 ? { AND: filterConditions } : {};
 
   // Sorting logic
-  let orderBy: Prisma.AttendanceOrderByWithRelationInput;
+  let orderBy: Prisma.ClassSubjectOrderByWithRelationInput;
 
-  if (sortBy === "student") {
-    orderBy = { student: { user: { name: sort } } };
+  if (sortBy === "teacher") {
+    orderBy = { teacher: { user: { name: sort } } };
   } else if (sortBy === "class") {
-    orderBy = { classSubject: { class: { name: sort } } };
+    orderBy = { class: { name: sort } };
   } else if (sortBy === "subject") {
-    orderBy = { classSubject: { subject: { name: sort } } };
+    orderBy = { subject: { name: sort } };
   } else {
-    orderBy = { date: "desc" }; // default
+    orderBy = { class: { name: "asc" } }; // default
   }
 
   try {
-    const totalAttendances = await prisma.attendance.count({ where });
-
-    const attendances = await prisma.attendance.findMany({
+    const classSubjects = await prisma.classSubject.findMany({
       where,
       orderBy,
-      skip,
-      take,
       include: {
-        student: { include: { user: true } },
-        classSubject: { include: { class: true, subject: true } },
-        teacher: { include: { teacher: { include: { user: true } } } },
-        academicYear: true,
+        class: {
+          include: {
+            students: { include: { user: true } },
+            academicYear: true,
+          },
+        },
+        subject: true,
+        teacher: { include: { user: true } },
+        attendances: true,
       },
     });
 
-    const isNext = totalAttendances > skip + attendances.length;
+    const studentsWithAttendance: StudentWithAttendanceDoc[] =
+      classSubjects.flatMap((cs) =>
+        cs.class.students.map((student) => {
+          // Find attendance record for the selected date only
+          const attendanceForDate = date
+            ? cs.attendances.find((a) => {
+                const aDate = new Date(a.date);
+                const targetDate = new Date(date);
+                return (
+                  a.studentId === student.id &&
+                  aDate.getFullYear() === targetDate.getFullYear() &&
+                  aDate.getMonth() === targetDate.getMonth() &&
+                  aDate.getDate() === targetDate.getDate()
+                );
+              })
+            : undefined;
+
+          return {
+            ...student,
+            classSubject: cs,
+            attendanceStatus: attendanceForDate?.status ?? "PENDING",
+          };
+        }),
+      );
 
     return {
       success: true,
       data: {
-        attendances,
-        isNext,
-        totalAttendances,
+        attendances: studentsWithAttendance,
       },
     };
   } catch (error) {
@@ -236,14 +239,8 @@ export async function updateAttendanceStatus(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const {
-    studentId,
-    classSubjectId,
-    classTeacherId,
-    date,
-    status,
-    academicYearId,
-  } = validationResult.params!;
+  const { studentId, classSubjectId, date, status, academicYearId } =
+    validationResult.params!;
 
   if (validationResult.session?.user.role !== "ADMIN")
     throw new UnauthorizedError("You do not have permission to create a class");
@@ -268,13 +265,12 @@ export async function updateAttendanceStatus(
       create: {
         studentId,
         classSubjectId,
-        classTeacherId,
         date: attendanceDate,
         status,
         academicYearId,
       },
     });
-
+    console.log(attendance);
     revalidatePath("/attendances");
 
     return { success: true, data: attendance };

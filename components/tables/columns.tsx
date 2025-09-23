@@ -655,7 +655,7 @@ export const getAttendanceColumns = (
   role: string,
   searchParams: ReadonlyURLSearchParams,
   pathname: string,
-): ColumnDef<AttendanceDoc>[] => {
+): ColumnDef<StudentWithAttendanceDoc>[] => {
   const makeSortableHeader = (key: string, label: string) => {
     const currentSort = searchParams.get("sort") || "asc";
     const currentSortBy = searchParams.get("sortBy") || "name";
@@ -688,14 +688,14 @@ export const getAttendanceColumns = (
   };
   return [
     {
-      accessorFn: (row) => row.student.user.image,
+      accessorFn: (row) => row.user.image,
       id: "image",
       header: "Image",
       cell: ({ row }) => (
         <div className="flex items-center justify-center">
           <Image
-            src={row.original.student.user.image || "/images/noAvatar.png"}
-            alt={row.original.student.user.name || ""}
+            src={row.original.user.image || "/images/noAvatar.png"}
+            alt={row.original.user.name || ""}
             width={32}
             height={32}
             className="rounded-full object-contain"
@@ -704,20 +704,17 @@ export const getAttendanceColumns = (
       ),
     },
     {
-      accessorFn: (row) => row.student.user.name,
+      accessorFn: (row) => row.user.name,
       id: "name",
       header: () => makeSortableHeader("name", "Name"),
       cell: ({ row }) => (
-        <Link
-          href={`/students/${row.original.student.user.id}`}
-          className="underline"
-        >
-          {row.original.student.user.name}
+        <Link href={`/students/${row.original.user.id}`} className="underline">
+          {row.original.user.name}
         </Link>
       ),
     },
     {
-      accessorKey: "student.studentId",
+      accessorKey: "studentId",
       header: "Student ID",
     },
     {
@@ -745,25 +742,21 @@ export const getAttendanceColumns = (
       ),
     },
     {
-      accessorKey: "teacher.teacher.user.name",
+      accessorKey: "classSubject.teacher.user.name",
       header: () => makeSortableHeader("teacher", "Teacher"),
       cell: ({ row }) => (
         <Link
-          href={`/teachers/${row.original.teacher.teacher.id}`}
+          href={`/teachers/${row.original.classSubject.teacher.id}`}
           className="hover:underline"
         >
-          {row.original.teacher.teacher.user.name}
+          {row.original.classSubject.teacher.user.name}
         </Link>
       ),
     },
     {
-      accessorKey: "status",
+      accessorKey: "attendanceStatus",
       header: "Attendance Status",
       cell: ({ row }) => <AttendanceStatusSelect attendance={row.original} />,
-    },
-    {
-      accessorKey: "remarks",
-      header: "Remarks",
     },
   ];
 };

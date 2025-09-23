@@ -194,7 +194,6 @@ export const GetAttendanceNumbersSchema = z.object({
 export const AttendanceSchema = z.object({
   studentId: z.string().min(1, "Student ID is required."),
   classSubjectId: z.string().min(1, "classSubjectId is required."),
-  classTeacherId: z.string().min(1, "classSubjectId is required."),
   date: z.date({ error: "Date is required." }),
   academicYearId: z.string().min(1, "Invalid academic year id."),
   status: z.enum(AttendanceStatus),

@@ -25,6 +25,7 @@ enum AttendanceStatus {
   ABSENT
   LATE
   EXCUSED
+  PENDING
 }
 
 enum GradeType {
@@ -118,8 +119,9 @@ model Teacher {
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  classes  ClassTeacher[]
-  subjects SubjectTeacher[]
+  classes       ClassTeacher[]
+  subjects      SubjectTeacher[]
+  classSubjects ClassSubject[]
 
   @@map("teachers")
 }
@@ -230,7 +232,6 @@ model ClassTeacher {
   schedules   Schedule[]
   assignments Assignment[]
   exams       Exam[]
-  attendances Attendance[]
 
   @@unique([classId, teacherId])
   @@map("class_teachers")
@@ -256,9 +257,11 @@ model ClassSubject {
   id        String @id @default(cuid())
   classId   String
   subjectId String
+  teacherId String
 
   class   Class   @relation(fields: [classId], references: [id], onDelete: Cascade)
   subject Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  teacher Teacher @relation(fields: [teacherId], references: [id], onDelete: Cascade)
 
   attendances Attendance[]
   schedules   Schedule[]
@@ -266,7 +269,7 @@ model ClassSubject {
   assignments Assignment[]
   exams       Exam[]
 
-  @@unique([classId, subjectId])
+  @@unique([classId, subjectId, teacherId])
   @@map("class_subjects")
 }
 
@@ -274,7 +277,6 @@ model Attendance {
   id             String           @id @default(cuid())
   studentId      String
   classSubjectId String
-  classTeacherId String
   date           DateTime
   status         AttendanceStatus
   remarks        String?
@@ -282,7 +284,6 @@ model Attendance {
 
   student      Student      @relation(fields: [studentId], references: [id], onDelete: Cascade)
   classSubject ClassSubject @relation(fields: [classSubjectId], references: [id], onDelete: Cascade)
-  teacher      ClassTeacher @relation(fields: [classTeacherId], references: [id], onDelete: Cascade)
   academicYear AcademicYear @relation(fields: [academicYearId], references: [id])
 
   createdAt DateTime @default(now())

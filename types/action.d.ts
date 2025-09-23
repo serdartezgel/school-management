@@ -70,6 +70,14 @@ declare global {
     include: { academicYear: true };
   }>;
 
+  type ClassSubjectDoc = Prisma.ClassSubjectGetPayload<{
+    include: {
+      class: { include: { students: { include: { user: true } } } };
+      subject: true;
+      teacher: { include: { user: true } };
+    };
+  }>;
+
   type SubjectDoc = Prisma.SubjectGetPayload<{
     include: { academicYear: true };
   }>;
@@ -78,10 +86,22 @@ declare global {
     include: {
       student: { include: { user: true } };
       classSubject: { include: { class: true; subject: true } };
-      teacher: { include: { teacher: { include: { user: true } } } };
       academicYear: true;
     };
   }>;
+
+  type StudentWithAttendanceDoc = Prisma.StudentGetPayload<{
+    include: {
+      user: true;
+    };
+  }> & {
+    attendance: Prisma.AttendanceGetPayload<{
+      include: {
+        classSubject: { include: { class: true; subject: true } };
+        academicYear: true;
+      };
+    }>;
+  };
 
   interface GetAttendanceNumbersParams {
     date: Date;
