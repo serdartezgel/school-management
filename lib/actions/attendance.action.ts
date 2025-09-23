@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache";
 import z from "zod";
 
-import { Prisma } from "@/prisma/client";
+import { Prisma, Role } from "@/prisma/client";
 
 import action from "../handlers/action";
 import handleError from "../handlers/error";
@@ -15,14 +15,19 @@ import {
   PaginatedSearchParamsSchema,
 } from "../validations";
 
-export async function getAttendances(params: PaginatedSearchParams): Promise<
+export async function getAttendances(
+  params: PaginatedSearchParams & { userId?: string; role?: Role },
+): Promise<
   ActionResponse<{
     attendances: StudentWithAttendanceDoc[];
   }>
 > {
   const validationResult = await action({
     params,
-    schema: PaginatedSearchParamsSchema,
+    schema: PaginatedSearchParamsSchema.extend({
+      userId: z.string().optional(),
+      role: z.enum(["ADMIN", "TEACHER", "STUDENT", "PARENT"]).optional(),
+    }),
   });
 
   const prisma = await dbConnect();
@@ -38,6 +43,8 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
     sortBy = "class",
     filterByClass,
     filterBySubject,
+    userId,
+    role,
   } = validationResult.params!;
 
   // Start building where conditions
@@ -90,6 +97,14 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
     });
   }
 
+  if (userId && role) {
+    if (role === "TEACHER") {
+      filterConditions.push({
+        teacher: { userId },
+      });
+    }
+  }
+
   // Merge all filters into `AND`
   const where: Prisma.ClassSubjectWhereInput =
     filterConditions.length > 0 ? { AND: filterConditions } : {};
@@ -114,7 +129,12 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
       include: {
         class: {
           include: {
-            students: { include: { user: true } },
+            students: {
+              include: {
+                user: true,
+                parent: { include: { user: true } },
+              },
+            },
             academicYear: true,
           },
         },
@@ -126,27 +146,34 @@ export async function getAttendances(params: PaginatedSearchParams): Promise<
 
     const studentsWithAttendance: StudentWithAttendanceDoc[] =
       classSubjects.flatMap((cs) =>
-        cs.class.students.map((student) => {
-          // Find attendance record for the selected date only
-          const attendanceForDate = date
-            ? cs.attendances.find((a) => {
-                const aDate = new Date(a.date);
-                const targetDate = new Date(date);
-                return (
-                  a.studentId === student.id &&
-                  aDate.getFullYear() === targetDate.getFullYear() &&
-                  aDate.getMonth() === targetDate.getMonth() &&
-                  aDate.getDate() === targetDate.getDate()
-                );
-              })
-            : undefined;
+        cs.class.students
+          // Filter students based on role
+          .filter((student) => {
+            if (role === "STUDENT") return student.user.id === userId;
+            if (role === "PARENT") return student.parent?.userId === userId;
+            return true; // TEACHER / ADMIN see all
+          })
+          .map((student) => {
+            // Find attendance record for the selected date only
+            const attendanceForDate = date
+              ? cs.attendances.find((a) => {
+                  const aDate = new Date(a.date);
+                  const targetDate = new Date(date);
+                  return (
+                    a.studentId === student.id &&
+                    aDate.getFullYear() === targetDate.getFullYear() &&
+                    aDate.getMonth() === targetDate.getMonth() &&
+                    aDate.getDate() === targetDate.getDate()
+                  );
+                })
+              : undefined;
 
-          return {
-            ...student,
-            classSubject: cs,
-            attendanceStatus: attendanceForDate?.status ?? "PENDING",
-          };
-        }),
+            return {
+              ...student,
+              classSubject: cs,
+              attendanceStatus: attendanceForDate?.status ?? "PENDING",
+            };
+          }),
       );
 
     return {
@@ -182,7 +209,7 @@ export async function getAttendanceNumbers(
     return handleError(validationResult) as ErrorResponse;
   }
 
-  const { date } = validationResult.params!;
+  const { date, userId, role } = validationResult.params!;
 
   try {
     const startOfDay = new Date(date);
@@ -191,9 +218,40 @@ export async function getAttendanceNumbers(
     const endOfDay = new Date(date);
     endOfDay.setHours(23, 59, 59, 999);
 
-    const where: Prisma.AttendanceWhereInput = {
+    let where: Prisma.AttendanceWhereInput = {
       date: { gte: startOfDay, lte: endOfDay },
     };
+
+    if (userId && role) {
+      if (role === "TEACHER") {
+        where = {
+          ...where,
+          classSubject: {
+            teacher: {
+              userId,
+            },
+          },
+        };
+      }
+      if (role === "STUDENT") {
+        where = {
+          ...where,
+          student: {
+            userId,
+          },
+        };
+      }
+      if (role === "PARENT") {
+        where = {
+          ...where,
+          student: {
+            parent: {
+              userId,
+            },
+          },
+        };
+      }
+    }
 
     const attendances = await prisma.attendance.findMany({
       where,

@@ -6,7 +6,6 @@ import { auth } from "@/auth";
 import StatCard from "@/components/cards/StatCard";
 import DayPicker from "@/components/daypicker/DayPicker";
 import SelectFilter from "@/components/filters/SelectFilter";
-import LocalSearch from "@/components/search/LocalSearch";
 import AttendanceTable from "@/components/tables/AttendanceTable";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -21,6 +20,15 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
   if (!session) redirect("/sign-in");
 
   const role = session.user.role;
+
+  const userId =
+    role === "TEACHER"
+      ? session.user.id
+      : role === "STUDENT"
+        ? session.user.id
+        : role === "PARENT"
+          ? session.user.id
+          : undefined;
 
   const {
     page,
@@ -53,9 +61,13 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
       sortBy,
       filterByClass,
       filterBySubject,
+      userId,
+      role,
     }),
     getAttendanceNumbers({
       date: date || new Date(),
+      userId,
+      role,
     }),
   ]);
 
@@ -98,24 +110,24 @@ const AttendancePage = async ({ searchParams }: RouteParams) => {
         />
       </section>
 
-      <section className="flex w-full flex-col items-center justify-between gap-4 pb-4 lg:flex-row">
-        <LocalSearch route={"/attendance"} />
-        <div className="flex gap-2">
-          <Suspense fallback={<div>Loading...</div>}>
-            <SelectFilter
-              placeholder="Select Class"
-              filterBy="filterByClass"
-              route="/attendance"
-              data={classes.data?.classes || []}
-            />
-            <SelectFilter
-              placeholder="Select Subject"
-              filterBy="filterBySubject"
-              route="/attendance"
-              data={subjects.data?.subjects || []}
-            />
-          </Suspense>
-        </div>
+      <section className="flex w-full items-center justify-start gap-4 pb-4">
+        <Suspense fallback={<div>Loading...</div>}>
+          {role === "ADMIN" ||
+            (role === "TEACHER" && (
+              <SelectFilter
+                placeholder="Select Class"
+                filterBy="filterByClass"
+                route="/attendance"
+                data={classes.data?.classes || []}
+              />
+            ))}
+          <SelectFilter
+            placeholder="Select Subject"
+            filterBy="filterBySubject"
+            route="/attendance"
+            data={subjects.data?.subjects || []}
+          />
+        </Suspense>
       </section>
 
       <section>

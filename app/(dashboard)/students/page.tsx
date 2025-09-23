@@ -11,6 +11,8 @@ const StudentsPage = async ({ searchParams }: RouteParams) => {
 
   const role = session.user.role;
 
+  if (role !== "ADMIN" && role !== "TEACHER") redirect("/");
+
   const { page, pageSize, query, sort } = await searchParams;
 
   const result = await getStudents({

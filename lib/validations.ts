@@ -189,6 +189,8 @@ export const UpdateSubjectSchema = SubjectSchema.partial().extend({
 
 export const GetAttendanceNumbersSchema = z.object({
   date: z.date(),
+  userId: z.string().optional(),
+  role: z.enum(["ADMIN", "TEACHER", "STUDENT", "PARENT"]).optional(),
 });
 
 export const AttendanceSchema = z.object({

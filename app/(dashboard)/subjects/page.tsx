@@ -11,6 +11,8 @@ const SubjectsPage = async ({ searchParams }: RouteParams) => {
 
   const role = session.user.role;
 
+  if (role !== "ADMIN") redirect("/");
+
   const { page, pageSize, query, sort } = await searchParams;
 
   const result = await getSubjects({

@@ -1,5 +1,7 @@
 import { Prisma } from "@prisma/client";
 
+import { Role } from "@/prisma/client";
+
 declare global {
   interface AuthCredentials {
     name: string;
@@ -105,5 +107,7 @@ declare global {
 
   interface GetAttendanceNumbersParams {
     date: Date;
+    userId?: string;
+    role?: Role;
   }
 }

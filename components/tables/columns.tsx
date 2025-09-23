@@ -756,7 +756,31 @@ export const getAttendanceColumns = (
     {
       accessorKey: "attendanceStatus",
       header: "Attendance Status",
-      cell: ({ row }) => <AttendanceStatusSelect attendance={row.original} />,
+      cell: ({ row }) => {
+        const statusColors: Record<string, string> = {
+          PRESENT:
+            "bg-green-200 text-green-800 hover:!bg-green-100 focus:!bg-green-100 focus:!text-green-800",
+          ABSENT:
+            "bg-red-100 text-red-800 hover:!bg-red-200 focus:!bg-red-200 focus:!text-red-800",
+          LATE: "bg-yellow-100 text-yellow-800 hover:!bg-yellow-200 focus:!bg-yellow-200 focus:!text-yellow-800",
+          EXCUSED:
+            "bg-blue-100 text-blue-800 hover:!bg-blue-200 focus:!bg-blue-200 focus:!text-blue-800",
+          PENDING: "",
+        };
+        return (
+          <>
+            {role === "ADMIN" || role === "TEACHER" ? (
+              <AttendanceStatusSelect attendance={row.original} />
+            ) : (
+              <span
+                className={`rounded-md px-2 py-1 text-sm font-medium ${statusColors[row.original.attendanceStatus]}`}
+              >
+                {row.original.attendanceStatus}
+              </span>
+            )}
+          </>
+        );
+      },
     },
   ];
 };
