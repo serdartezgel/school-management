@@ -26,3 +26,10 @@ export function getCurrentWeekRange(): string {
 
   return `${formatDate(monday)} - ${formatDate(friday)}`;
 }
+
+export const roleColors: Record<string, string> = {
+  ADMIN: "border-red-500",
+  TEACHER: "border-green-500",
+  STUDENT: "border-yellow-500",
+  PARENT: "border-blue-500",
+};

@@ -326,6 +326,61 @@ async function main() {
     ),
   );
 
+  // ---------- Conversations ----------
+  await prisma.conversation.create({
+    data: {
+      user1Id: teachers[0].userId, // Teacher 1
+      user2Id: students[0].userId, // Student 1
+      messages: {
+        create: [
+          {
+            senderId: teachers[0].userId,
+            content: "Hello, welcome to the new school year!",
+          },
+          {
+            senderId: students[0].userId,
+            content: "Thank you, teacher!",
+          },
+        ],
+      },
+    },
+  });
+
+  await prisma.conversation.create({
+    data: {
+      user1Id: adminUser.id, // Admin
+      user2Id: parents[0].userId, // Parent 1
+      messages: {
+        create: [
+          {
+            senderId: adminUser.id,
+            content: "We have scheduled a parent-teacher meeting next week.",
+          },
+          {
+            senderId: parents[0].userId,
+            content: "Thanks, I’ll be there.",
+          },
+        ],
+      },
+    },
+  });
+
+  // Example: Teacher sending to multiple users (if you extend schema to support multiple receivers)
+  await prisma.conversation.create({
+    data: {
+      user1Id: teachers[1].userId, // Teacher 2
+      user2Id: students[1].userId, // Student 2
+      messages: {
+        create: [
+          {
+            senderId: teachers[1].userId,
+            content: "Reminder: Homework is due tomorrow!",
+          },
+        ],
+      },
+    },
+  });
+
   console.log("✅ Full seeding completed!");
 }
 
