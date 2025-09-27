@@ -124,4 +124,16 @@ declare global {
       student: { include: { user: true } };
     };
   }>;
+
+  type ConversationDoc = Prisma.ConversationGetPayload<{
+    include: { messages: true };
+  }>;
+
+  type MessageDoc = Prisma.MessageGetPayload<{
+    include: {
+      sender: {
+        select: { id: true; name: true; image: true; role: true };
+      };
+    };
+  }>;
 }

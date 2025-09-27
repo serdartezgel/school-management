@@ -200,3 +200,11 @@ export const AttendanceSchema = z.object({
   academicYearId: z.string().min(1, "Invalid academic year id."),
   status: z.enum(AttendanceStatus),
 });
+
+export const GetConversationsSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+});
+
+export const GetConversationByIdSchema = z.object({
+  id: z.string().min(1, "Conversation ID is required."),
+});

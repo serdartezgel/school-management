@@ -1,4 +1,5 @@
 import { clsx, type ClassValue } from "clsx";
+import { format } from "date-fns";
 import { twMerge } from "tailwind-merge";
 
 export function cn(...inputs: ClassValue[]) {
@@ -32,4 +33,9 @@ export const roleColors: Record<string, string> = {
   TEACHER: "border-green-500",
   STUDENT: "border-yellow-500",
   PARENT: "border-blue-500",
+};
+
+export const formatMessageDate = (date: Date) => {
+  if (!date) return "";
+  return format(new Date(date), "Pp");
 };

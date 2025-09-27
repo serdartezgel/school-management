@@ -1,122 +1,145 @@
 "use client";
 
-import { faker } from "@faker-js/faker";
-import { useEffect, useRef, useState } from "react";
+import { LoaderIcon, XIcon } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { startTransition, useEffect, useRef, useState } from "react";
 
+import { getConversationById } from "@/lib/actions/message.action";
+import { formatMessageDate } from "@/lib/utils";
+
+import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-type Message = {
-  id: string;
-  sender: string;
-  content: string;
-  isOwn: boolean;
-  timestamp: string;
-};
+interface ChatWindowProps {
+  conversationId: string | null;
+  onClose: () => void;
+}
 
-// Dummy messages generator
-const generateDummyMessages = () =>
-  Array.from({ length: 10 }).map((_, i) => ({
-    id: faker.string.uuid(),
-    sender: faker.person.fullName(),
-    content: faker.lorem.sentence(),
-    isOwn: i % 2 === 0,
-    timestamp: new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-    }),
-  }));
+const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
+  const session = useSession();
+  const userId = session.data?.user.id || "";
 
-const ChatWindow = ({ conversationId }: { conversationId: string }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<MessageDoc[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load messages whenever conversation changes
   useEffect(() => {
-    const loadedMessages = generateDummyMessages(); // replace with API fetch
-    setMessages(loadedMessages);
+    if (conversationId) {
+      setLoading(true);
+      startTransition(async () => {
+        const result = await getConversationById({ id: conversationId });
+        if (result.success) setMessages(result.data?.messages || []);
+        setLoading(false);
+      });
+    } else {
+      setMessages([]);
+    }
   }, [conversationId]);
+
+  const isOwn = (message: MessageDoc, userId: string): boolean => {
+    return message.senderId === userId;
+  };
 
   // Scroll to bottom whenever messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {
-    if (!newMessage.trim()) return;
-    const message: Message = {
-      id: faker.string.uuid(),
-      sender: "You",
-      content: newMessage,
-      isOwn: true,
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-    setMessages([...messages, message]);
-    setNewMessage("");
-  };
+  const handleSend = () => {};
+
+  console.log(messages);
 
   return (
     <div className="bg-sidebar flex h-full flex-1 flex-col rounded-r-xl border border-l-0">
-      {/* Header */}
-      <div className="flex items-center justify-between border-b px-4 py-3">
-        <h2 className="text-foreground font-medium">Message Sender</h2>
-      </div>
+      {loading ? (
+        <div className="flex h-full items-center justify-center">
+          <LoaderIcon className="size-6 animate-spin" />
+        </div>
+      ) : (
+        <>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b p-4">
+            <h2 className="text-foreground py-1.5 font-medium">
+              {messages.length > 0
+                ? messages.find((msg) => !isOwn(msg, userId))?.sender.name ||
+                  "Chat"
+                : "Chat"}
+            </h2>
 
-      {/* Messages */}
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`flex ${msg.isOwn ? "justify-end" : "justify-start"}`}
-          >
-            <div
-              className={`max-w-[60%] rounded-xl px-4 py-2 ${
-                msg.isOwn
-                  ? "bg-cyan-500 text-gray-100"
-                  : "bg-gray-100 text-gray-800"
-              }`}
-            >
-              {msg.isOwn ? (
-                <p className="font-medium">You</p>
-              ) : (
-                <p className="font-medium text-gray-700">{msg.sender}</p>
-              )}
-              <p className="text-sm">{msg.content}</p>
-              {msg.isOwn ? (
-                <span className="block text-right text-xs text-gray-300">
-                  {msg.timestamp}
-                </span>
-              ) : (
-                <span className="block text-right text-xs text-gray-400">
-                  {msg.timestamp}
-                </span>
-              )}
-            </div>
+            {messages.length > 0 && (
+              <Button
+                variant={"ghost"}
+                onClick={onClose}
+                title="Close"
+                className="cursor-pointer"
+              >
+                <XIcon className="size-6" />
+              </Button>
+            )}
           </div>
-        ))}
-        <div ref={messagesEndRef} />
-      </div>
 
-      {/* Input */}
-      <div className="flex items-center gap-2 border-t px-4 py-3">
-        <Input
-          type="text"
-          placeholder="Type your message..."
-          className="flex-1 rounded-xl border px-4 py-2"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSend()}
-        />
-        <button
-          onClick={handleSend}
-          className="rounded-full bg-cyan-500 px-4 py-2 text-white hover:bg-blue-600"
-        >
-          Send
-        </button>
-      </div>
+          {/* Messages */}
+          <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
+            {messages.map((msg) => {
+              const own = isOwn(msg, userId);
+              return (
+                <div
+                  key={msg.id}
+                  className={`flex ${own ? "justify-end" : "justify-start"}`}
+                >
+                  <div
+                    className={`max-w-[60%] rounded-xl px-4 py-2 ${
+                      own
+                        ? "bg-cyan-500 text-gray-100"
+                        : "bg-gray-100 text-gray-800"
+                    }`}
+                  >
+                    {own ? (
+                      <p className="font-medium">You</p>
+                    ) : (
+                      <p className="font-medium text-gray-700">
+                        {msg.sender.name}
+                      </p>
+                    )}
+                    <p className="text-sm">{msg.content}</p>
+                    {own ? (
+                      <span className="block text-right text-xs text-gray-300">
+                        {formatMessageDate(msg.createdAt)}
+                      </span>
+                    ) : (
+                      <span className="block text-right text-xs text-gray-400">
+                        {formatMessageDate(msg.createdAt)}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {/* Input */}
+          <div className="flex items-center gap-2 border-t px-4 py-3">
+            <Input
+              type="text"
+              placeholder="Type your message..."
+              className="flex-1 rounded-xl border px-4 py-2"
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSend()}
+            />
+            <button
+              onClick={handleSend}
+              className="rounded-full bg-cyan-500 px-4 py-2 text-white hover:bg-blue-600"
+            >
+              Send
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 };
