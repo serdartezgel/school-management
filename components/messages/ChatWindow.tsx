@@ -1,37 +1,48 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
 import { CheckCheckIcon, CheckIcon, LoaderIcon, XIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { startTransition, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
-import { getConversationById } from "@/lib/actions/message.action";
+import { getConversationById, sendMessage } from "@/lib/actions/message.action";
 import { formatMessageDate } from "@/lib/utils";
+import { SendMessageSchema } from "@/lib/validations";
 
 import { Button } from "../ui/button";
+import { Form, FormControl, FormField, FormItem } from "../ui/form";
 import { Input } from "../ui/input";
 
 interface ChatWindowProps {
   conversationId: string | null;
+  receiverId?: string;
   onClose: () => void;
+  onMessageSent?: (convId: string, newMessage: MessageDoc) => void;
 }
 
-const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
+const ChatWindow = ({
+  conversationId,
+  receiverId,
+  onClose,
+  onMessageSent,
+}: ChatWindowProps) => {
   const session = useSession();
   const userId = session.data?.user.id || "";
 
   const [messages, setMessages] = useState<MessageDoc[]>([]);
-  const [newMessage, setNewMessage] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [isFetching, startFetching] = useTransition();
+  const [isSending, startSending] = useTransition();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (conversationId) {
-      setLoading(true);
-      startTransition(async () => {
+      startFetching(async () => {
         const result = await getConversationById({ id: conversationId });
         if (result.success) setMessages(result.data?.messages || []);
-        setLoading(false);
       });
     } else {
       setMessages([]);
@@ -47,11 +58,45 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleSend = () => {};
+  const form = useForm<z.infer<typeof SendMessageSchema>>({
+    resolver: zodResolver(SendMessageSchema),
+    defaultValues: {
+      senderId: userId,
+      content: "",
+    },
+  });
+
+  useEffect(() => {
+    form.setValue("conversationId", conversationId || undefined);
+    if (receiverId) form.setValue("receiverId", receiverId);
+  }, [conversationId, form, receiverId]);
+
+  const handleSend = async (data: z.infer<typeof SendMessageSchema>) => {
+    startSending(async () => {
+      const result = await sendMessage({
+        ...data,
+        receiverId: receiverId!,
+        conversationId: conversationId!,
+      });
+
+      if (result.success) {
+        setMessages((prev) => [...prev, result.data?.message]);
+        form.reset({ ...form.getValues(), content: "" });
+        onMessageSent?.(conversationId!, result.data?.message);
+        toast.success("Success", {
+          description: "Message sent successfully.",
+        });
+      } else {
+        toast.error(`Error ${result.status}`, {
+          description: result.error?.message || "Something went wrong.",
+        });
+      }
+    });
+  };
 
   return (
     <div className="bg-sidebar flex h-full flex-1 flex-col rounded-r-xl border border-l-0">
-      {loading ? (
+      {isFetching ? (
         <div className="flex h-full items-center justify-center">
           <LoaderIcon className="size-6 animate-spin" />
         </div>
@@ -96,13 +141,11 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
                     }`}
                   >
                     {own ? (
-                      <p className="font-medium">You</p>
+                      <p className="text-sm">You</p>
                     ) : (
-                      <p className="font-medium text-gray-700">
-                        {msg.sender.name}
-                      </p>
+                      <p className="text-sm text-gray-700">{msg.sender.name}</p>
                     )}
-                    <p className="text-sm">{msg.content}</p>
+                    <p>{msg.content}</p>
                     <p
                       className={`flex items-center justify-end gap-1 text-xs ${
                         own ? "text-gray-300" : "text-gray-400"
@@ -123,23 +166,44 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="flex items-center gap-2 border-t px-4 py-3">
-            <Input
-              type="text"
-              placeholder="Type your message..."
-              className="flex-1 rounded-xl border px-4 py-2"
-              value={newMessage}
-              onChange={(e) => setNewMessage(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button
-              onClick={handleSend}
-              className="rounded-full bg-cyan-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
-            >
-              Send
-            </button>
-          </div>
+          {conversationId && (
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit(handleSend)}
+                className="flex items-center gap-2 border-t px-4 py-3"
+              >
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem className="flex-1">
+                      <FormControl>
+                        <Input
+                          type="text"
+                          placeholder="Type your message..."
+                          className="rounded-full"
+                          {...field}
+                        />
+                      </FormControl>
+                    </FormItem>
+                  )}
+                />
+                <Button
+                  type="submit"
+                  disabled={isSending || !form.watch("content").trim()}
+                  className="rounded-full bg-cyan-600 text-sm text-white hover:bg-cyan-400"
+                >
+                  {isSending ? (
+                    <>
+                      <LoaderIcon className="mr-2 size-3 animate-spin" />
+                    </>
+                  ) : (
+                    <>Send</>
+                  )}
+                </Button>
+              </form>
+            </Form>
+          )}
         </>
       )}
     </div>

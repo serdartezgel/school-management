@@ -218,3 +218,10 @@ export const GetAllUsersByRoleSchema = z.object({
   userId: z.string().min(1, "User ID is required."),
   userRole: z.enum(["ADMIN", "TEACHER", "STUDENT", "PARENT"]),
 });
+
+export const SendMessageSchema = z.object({
+  senderId: z.string().min(1, "Sender ID is required."),
+  receiverId: z.string().optional(),
+  content: z.string().min(1, "Content is required."),
+  conversationId: z.string().optional(),
+});

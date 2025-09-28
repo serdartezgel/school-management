@@ -1,9 +1,16 @@
 "use client";
 
+import { zodResolver } from "@hookform/resolvers/zod";
+import { LoaderIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { startTransition, useState } from "react";
+import { useState, useTransition } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import z from "zod";
 
+import { sendMessage } from "@/lib/actions/message.action";
 import { getAllUsersByRole } from "@/lib/actions/user.action";
+import { SendMessageSchema } from "@/lib/validations";
 import { Role } from "@/prisma/client";
 
 import { Button } from "../ui/button";
@@ -24,6 +31,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
+import { Form, FormControl, FormField, FormItem } from "../ui/form";
 import { Separator } from "../ui/separator";
 import { Textarea } from "../ui/textarea";
 
@@ -31,21 +39,50 @@ const NewMessageModal = () => {
   const session = useSession();
 
   const [users, setUsers] = useState<UserDoc[]>([]);
-  const [loading, setLoading] = useState(false);
   const [open, setOpen] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState<string[]>([]);
+
+  const [isFetching, startFetching] = useTransition();
+  const [isSending, startSending] = useTransition();
 
   const userId = session.data?.user.id;
   const userRole = session.data?.user.role;
 
+  const form = useForm<z.infer<typeof SendMessageSchema>>({
+    resolver: zodResolver(SendMessageSchema),
+    defaultValues: {
+      senderId: userId,
+      content: "",
+    },
+  });
+
+  const handleSend = async (data: z.infer<typeof SendMessageSchema>) => {
+    startSending(async () => {
+      try {
+        await Promise.all(
+          selectedUsers.map((receiverId) =>
+            sendMessage({ ...data, receiverId }),
+          ),
+        );
+
+        form.reset({ ...form.getValues(), content: "" });
+        setSelectedUsers([]);
+        toast.success("Success", {
+          description: `Message sent to ${selectedUsers.length} user(s).`,
+        });
+        window.location.reload();
+      } catch (error) {
+        toast.error(`Error message: ${error}`);
+      }
+    });
+  };
+
   const getUsers = async () => {
     if (!userId || !userRole) return;
 
-    setLoading(true);
-    startTransition(async () => {
+    startFetching(async () => {
       const result = await getAllUsersByRole({ userId, userRole });
       setUsers(result.data?.users || []);
-      setLoading(false);
     });
   };
 
@@ -120,7 +157,6 @@ const NewMessageModal = () => {
     {} as Record<string, UserDoc[]>,
   );
 
-  console.log(users);
   return (
     <Dialog
       open={open}
@@ -152,11 +188,11 @@ const NewMessageModal = () => {
                   variant="outline"
                   className="w-full cursor-pointer justify-start truncate text-gray-500"
                 >
-                  {loading
+                  {isFetching
                     ? "Loading..."
                     : selectedUsers.length
                       ? `${selectedUsers.length} selected`
-                      : "Select Users"}
+                      : "Select Users *"}
                 </Button>
               </DropdownMenuTrigger>
 
@@ -165,34 +201,34 @@ const NewMessageModal = () => {
                   <>
                     <DropdownMenuLabel>Quick Select</DropdownMenuLabel>
                     <Separator />
+                    {topOptions.map((opt) => {
+                      const isSelected =
+                        opt.id === "all-users"
+                          ? isAllUsersSelected
+                          : isRoleGroupSelected(opt.role!);
+
+                      return (
+                        <DropdownMenuItem
+                          key={opt.id}
+                          onSelect={(e) => {
+                            e.preventDefault();
+                            if (opt.id === "all-users") {
+                              toggleAllUsers();
+                            } else {
+                              toggleRoleGroup(opt.role!);
+                            }
+                          }}
+                          className="cursor-pointer"
+                        >
+                          {isSelected ? "✅ " : "☐ "}
+                          {opt.label}
+                        </DropdownMenuItem>
+                      );
+                    })}
+
+                    <Separator />
                   </>
                 )}
-                {topOptions.map((opt) => {
-                  const isSelected =
-                    opt.id === "all-users"
-                      ? isAllUsersSelected
-                      : isRoleGroupSelected(opt.role!);
-
-                  return (
-                    <DropdownMenuItem
-                      key={opt.id}
-                      onSelect={(e) => {
-                        e.preventDefault();
-                        if (opt.id === "all-users") {
-                          toggleAllUsers();
-                        } else {
-                          toggleRoleGroup(opt.role!);
-                        }
-                      }}
-                      className="cursor-pointer"
-                    >
-                      {isSelected ? "✅ " : "☐ "}
-                      {opt.label}
-                    </DropdownMenuItem>
-                  );
-                })}
-
-                <Separator />
 
                 {Object.entries(groupedUsers).map(([role, users]) => (
                   <div key={role}>
@@ -221,7 +257,7 @@ const NewMessageModal = () => {
             {selectedUsers.length > 0 && (
               <div className="mt-2 w-full">
                 <p className="mb-1 text-sm font-medium text-gray-600">
-                  Selected Users:
+                  Selected Users (Click to remove):
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {users
@@ -241,23 +277,50 @@ const NewMessageModal = () => {
             )}
           </div>
 
-          <Textarea
-            placeholder="Your message"
-            className="h-full w-full md:w-1/2"
-          />
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(handleSend)}
+              className="flex h-full w-full flex-col items-end gap-4 md:w-1/2"
+            >
+              <FormField
+                control={form.control}
+                name="content"
+                render={({ field }) => (
+                  <FormItem className="h-full w-full flex-1">
+                    <FormControl>
+                      <Textarea placeholder="Your message *" {...field} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter className="flex justify-end gap-4">
+                <DialogClose asChild>
+                  <Button variant="outline" className="w-full md:w-20">
+                    Cancel
+                  </Button>
+                </DialogClose>
+                <Button
+                  type="submit"
+                  disabled={
+                    isSending ||
+                    !form.watch("content").trim() ||
+                    selectedUsers.length === 0
+                  }
+                  className="w-full bg-cyan-600 text-white hover:bg-cyan-400 md:w-20"
+                >
+                  {isSending ? (
+                    <>
+                      <LoaderIcon className="mr-2 size-3 animate-spin" />
+                    </>
+                  ) : (
+                    <>Send</>
+                  )}
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
         </div>
-
-        <DialogFooter className="flex justify-end gap-4">
-          <DialogClose asChild>
-            <Button variant="outline" className="">
-              Cancel
-            </Button>
-          </DialogClose>
-
-          <Button className="rounded-md bg-cyan-600 text-white hover:bg-cyan-500">
-            Send
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

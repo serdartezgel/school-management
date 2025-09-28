@@ -1,5 +1,6 @@
 "use client";
 
+import { format } from "date-fns";
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
@@ -38,6 +39,25 @@ const Conversations = ({
       conv.otherUser.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
   }, [conversations, searchTerm]);
+
+  const handleMessageSent = (convId: string, newMessage: MessageDoc) => {
+    setConversations((prev) => {
+      const updated = prev.map((conv) =>
+        conv.id === convId
+          ? {
+              ...conv,
+              lastMessage: newMessage,
+              updatedAt: new Date(newMessage.createdAt),
+            }
+          : conv,
+      );
+
+      return updated.sort(
+        (a, b) =>
+          new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime(),
+      );
+    });
+  };
 
   return (
     <>
@@ -97,9 +117,14 @@ const Conversations = ({
                     </span>
                   )}
                 </div>
-                <p className="text-foreground truncate text-sm">
-                  {conv.lastMessage?.content || ""}
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-foreground flex-1 truncate text-sm">
+                    {conv.lastMessage?.content || ""}
+                  </p>
+                  <span className="text-xs">
+                    {format(new Date(conv.updatedAt), "p")}
+                  </span>
+                </div>
               </div>
             </div>
           ))}
@@ -109,7 +134,13 @@ const Conversations = ({
       <div className="h-full flex-1">
         <ChatWindow
           conversationId={selectedId}
+          receiverId={
+            selectedId
+              ? conversations.find((c) => c.id === selectedId)?.otherUser.id
+              : undefined
+          }
           onClose={() => setSelectedId(null)}
+          onMessageSent={handleMessageSent}
         />
       </div>
     </>

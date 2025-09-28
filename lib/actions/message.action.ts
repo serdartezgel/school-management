@@ -11,6 +11,7 @@ import {
   GetConversationByIdSchema,
   GetConversationsSchema,
   MarkConversationAsReadSchema,
+  SendMessageSchema,
 } from "../validations";
 
 export async function getConversations(params: { userId: string }): Promise<
@@ -219,6 +220,95 @@ export async function getUnreadMessageCount(params: {
       data: { unreadCount },
     };
   } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function sendMessage(params: {
+  senderId: string;
+  receiverId: string;
+  content: string;
+  conversationId?: string;
+}): Promise<
+  ActionResponse<{ conversation: ConversationDoc; message: MessageDoc }>
+> {
+  const validationResult = await action({
+    params,
+    schema: SendMessageSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { senderId, receiverId, content, conversationId } =
+    validationResult.params!;
+
+  try {
+    let conversation;
+
+    if (conversationId) {
+      conversation = await prisma.conversation.update({
+        where: { id: conversationId },
+        data: { updatedAt: new Date() },
+      });
+    } else {
+      conversation = await prisma.conversation.findFirst({
+        where: {
+          OR: [
+            { user1Id: senderId, user2Id: receiverId },
+            { user1Id: receiverId, user2Id: senderId },
+          ],
+        },
+      });
+
+      if (!conversation) {
+        conversation = await prisma.conversation.create({
+          data: {
+            user1Id: senderId,
+            user2Id: receiverId!,
+          },
+        });
+      }
+    }
+
+    const message = await prisma.message.create({
+      data: {
+        conversationId: conversation.id,
+        senderId,
+        content,
+      },
+      include: {
+        sender: {
+          select: { id: true, name: true, image: true, role: true },
+        },
+      },
+    });
+
+    conversation = await prisma.conversation.update({
+      where: { id: conversation.id },
+      data: { updatedAt: new Date() },
+    });
+
+    return { success: true, data: { conversation, message } };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === "P2002") {
+        const fields = error.meta?.target as string[];
+        return {
+          success: false,
+          error: {
+            message: "Unique constraint failed",
+            details: Object.fromEntries(
+              fields.map((f) => [f, [`${f} must be unique`]]),
+            ),
+          },
+          status: 400,
+        } satisfies ErrorResponse;
+      }
+    }
     return handleError(error) as ErrorResponse;
   }
 }
