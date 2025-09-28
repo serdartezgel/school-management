@@ -7,7 +7,7 @@ import { markMessagesAsRead } from "@/lib/actions/message.action";
 import { roleColors } from "@/lib/utils";
 
 import ChatWindow from "./ChatWindow";
-import { Button } from "../ui/button";
+import NewMessageModal from "./NewMessageModal";
 import { Input } from "../ui/input";
 import { Separator } from "../ui/separator";
 
@@ -19,10 +19,6 @@ const Conversations = ({
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [conversations, setConversations] = useState(data.conversations);
-
-  const handleNewMessage = () => {
-    alert("Open New Message Modal"); // replace with modal logic later
-  };
 
   const handleSelectConversation = async (convId: string, senderId: string) => {
     setSelectedId(convId);
@@ -47,13 +43,7 @@ const Conversations = ({
     <>
       <div className="bg-sidebar flex h-full w-64 flex-col rounded-l-xl border">
         <div className="p-4">
-          <Button
-            onClick={handleNewMessage}
-            className="w-full"
-            variant={"outline"}
-          >
-            + New Message
-          </Button>
+          <NewMessageModal />
         </div>
 
         <Separator />

@@ -213,3 +213,8 @@ export const MarkConversationAsReadSchema = z.object({
   conversationId: z.string().min(1, "Conversation ID is required."),
   senderId: z.string().min(1, "User ID is required."),
 });
+
+export const GetAllUsersByRoleSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+  userRole: z.enum(["ADMIN", "TEACHER", "STUDENT", "PARENT"]),
+});

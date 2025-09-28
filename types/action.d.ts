@@ -14,12 +14,29 @@ declare global {
     ids: string[];
   }
 
-  export type TeacherDoc = Prisma.TeacherGetPayload<{
+  type UserDoc = Prisma.UserGetPayload<{
+    select: {
+      id: true;
+      name: true;
+      role: true;
+      teacherProfile: true;
+      studentProfile: {
+        select: { classId: true; parentId: true };
+      };
+      parentProfile: {
+        select: {
+          children: { select: { id: true } };
+        };
+      };
+    };
+  }>;
+
+  type TeacherDoc = Prisma.TeacherGetPayload<{
     include: {
       user: true;
     };
   }>;
-  export type TeacherAccount = Prisma.TeacherGetPayload<{
+  type TeacherAccount = Prisma.TeacherGetPayload<{
     include: {
       user: {
         include: {
