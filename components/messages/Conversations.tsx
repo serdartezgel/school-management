@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useMemo, useState } from "react";
 
+import { markMessagesAsRead } from "@/lib/actions/message.action";
 import { roleColors } from "@/lib/utils";
 
 import ChatWindow from "./ChatWindow";
@@ -17,16 +18,30 @@ const Conversations = ({
 }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [conversations, setConversations] = useState(data.conversations);
 
   const handleNewMessage = () => {
     alert("Open New Message Modal"); // replace with modal logic later
   };
 
+  const handleSelectConversation = async (convId: string, senderId: string) => {
+    setSelectedId(convId);
+
+    await markMessagesAsRead({ conversationId: convId, senderId });
+
+    // Update unread count locally
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === convId ? { ...conv, unreadCount: 0 } : conv,
+      ),
+    );
+  };
+
   const filteredConversations = useMemo(() => {
-    return data.conversations.filter((conv) =>
+    return conversations.filter((conv) =>
       conv.otherUser.name.toLowerCase().includes(searchTerm.toLowerCase()),
     );
-  }, [data.conversations, searchTerm]);
+  }, [conversations, searchTerm]);
 
   return (
     <>
@@ -67,7 +82,9 @@ const Conversations = ({
           {filteredConversations.map((conv) => (
             <div
               key={conv.id}
-              onClick={() => setSelectedId(conv.id)}
+              onClick={() =>
+                handleSelectConversation(conv.id, conv.otherUser.id)
+              }
               className={`hover:bg-accent flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ${
                 selectedId === conv.id ? "bg-cyan-500" : ""
               }`}
@@ -84,20 +101,21 @@ const Conversations = ({
                   <h4 className="text-foreground truncate text-sm font-medium">
                     {conv.otherUser.name}
                   </h4>
-                  {/* {conv.unreadCount > 0 && (
+                  {conv.unreadCount > 0 && (
                     <span className="text-foreground size-5 rounded-full bg-blue-500 py-0.5 text-center text-xs">
                       {conv.unreadCount}
                     </span>
-                  )} */}
+                  )}
                 </div>
                 <p className="text-foreground truncate text-sm">
-                  {conv.lastMessage.content}
+                  {conv.lastMessage?.content || ""}
                 </p>
               </div>
             </div>
           ))}
         </div>
       </div>
+
       <div className="h-full flex-1">
         <ChatWindow
           conversationId={selectedId}

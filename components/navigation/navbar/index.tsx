@@ -3,11 +3,17 @@ import Link from "next/link";
 
 import { auth } from "@/auth";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { getUnreadMessageCount } from "@/lib/actions/message.action";
 
 import Theme from "./Theme";
 
 const Navbar = async () => {
   const session = await auth();
+  const userId = session?.user.id || "";
+
+  const { data } = await getUnreadMessageCount({ userId });
+
+  const unreadCount = data?.unreadCount || 0;
 
   return (
     <nav className="bg-sidebar fixed z-50 flex w-full items-center justify-between gap-5 border-b p-3 md:px-6">
@@ -31,8 +37,8 @@ const Navbar = async () => {
 
       <div className="flex items-center justify-end gap-4 md:gap-6">
         <Link
-          href="/"
-          className="bg-background dark:bg-input/30 flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
+          href="/messages"
+          className="bg-background dark:bg-input/30 relative flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image
             src="/images/message.png"
@@ -41,9 +47,14 @@ const Navbar = async () => {
             height={20}
             className="object-contain dark:invert-100"
           />
+          {unreadCount > 0 && (
+            <span className="text-foreground absolute -top-1 -right-1 size-4 rounded-full bg-blue-500 text-center text-[10px]">
+              {unreadCount}
+            </span>
+          )}
         </Link>
         <Link
-          href="/"
+          href="/announcements"
           className="bg-background dark:bg-input/30 flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image

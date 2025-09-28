@@ -208,3 +208,8 @@ export const GetConversationsSchema = z.object({
 export const GetConversationByIdSchema = z.object({
   id: z.string().min(1, "Conversation ID is required."),
 });
+
+export const MarkConversationAsReadSchema = z.object({
+  conversationId: z.string().min(1, "Conversation ID is required."),
+  senderId: z.string().min(1, "User ID is required."),
+});

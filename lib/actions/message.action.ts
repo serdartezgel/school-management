@@ -1,5 +1,7 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
+
 import { Prisma } from "@/prisma/client";
 
 import action from "../handlers/action";
@@ -8,11 +10,12 @@ import dbConnect from "../prisma";
 import {
   GetConversationByIdSchema,
   GetConversationsSchema,
+  MarkConversationAsReadSchema,
 } from "../validations";
 
 export async function getConversations(params: { userId: string }): Promise<
   ActionResponse<{
-    conversations: ConversationDoc[];
+    conversations: (ConversationDoc & { unreadCount: number })[];
     totalConversations: number;
   }>
 > {
@@ -47,6 +50,16 @@ export async function getConversations(params: { userId: string }): Promise<
         user1: { select: { id: true, name: true, image: true, role: true } },
         user2: { select: { id: true, name: true, image: true, role: true } },
         messages: { orderBy: { createdAt: "desc" }, take: 1 },
+        _count: {
+          select: {
+            messages: {
+              where: {
+                readAt: null,
+                NOT: { senderId: userId },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -57,6 +70,7 @@ export async function getConversations(params: { userId: string }): Promise<
         otherUser,
         lastMessage: conv.messages[0] ?? null,
         updatedAt: conv.updatedAt,
+        unreadCount: conv._count.messages ?? 0,
       };
     });
 
@@ -128,6 +142,81 @@ export async function getConversationById(params: { id: string }): Promise<
         messages,
         totalMessages,
       },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function markMessagesAsRead(params: {
+  conversationId: string;
+  senderId: string;
+}): Promise<ActionResponse> {
+  const validationResult = await action({
+    params,
+    schema: MarkConversationAsReadSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { conversationId, senderId } = validationResult.params!;
+
+  try {
+    await prisma.message.updateMany({
+      where: {
+        conversationId,
+        senderId,
+        readAt: null,
+      },
+      data: {
+        readAt: new Date(),
+      },
+    });
+
+    revalidatePath("/messages");
+
+    return {
+      success: true,
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getUnreadMessageCount(params: {
+  userId: string;
+}): Promise<ActionResponse<{ unreadCount: number }>> {
+  const validationResult = await action({
+    params,
+    schema: GetConversationsSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = validationResult.params!;
+
+  try {
+    const unreadCount = await prisma.message.count({
+      where: {
+        readAt: null,
+        senderId: { not: userId },
+        conversation: {
+          OR: [{ user1Id: userId }, { user2Id: userId }],
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: { unreadCount },
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;

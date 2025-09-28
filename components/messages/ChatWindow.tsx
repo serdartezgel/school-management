@@ -1,6 +1,6 @@
 "use client";
 
-import { LoaderIcon, XIcon } from "lucide-react";
+import { CheckCheckIcon, CheckIcon, LoaderIcon, XIcon } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { startTransition, useEffect, useRef, useState } from "react";
 
@@ -25,7 +25,6 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load messages whenever conversation changes
   useEffect(() => {
     if (conversationId) {
       setLoading(true);
@@ -37,7 +36,7 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
     } else {
       setMessages([]);
     }
-  }, [conversationId]);
+  }, [conversationId, userId]);
 
   const isOwn = (message: MessageDoc, userId: string): boolean => {
     return message.senderId === userId;
@@ -49,8 +48,6 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
   }, [messages]);
 
   const handleSend = () => {};
-
-  console.log(messages);
 
   return (
     <div className="bg-sidebar flex h-full flex-1 flex-col rounded-r-xl border border-l-0">
@@ -85,6 +82,7 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
           <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-4">
             {messages.map((msg) => {
               const own = isOwn(msg, userId);
+
               return (
                 <div
                   key={msg.id}
@@ -105,15 +103,19 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
                       </p>
                     )}
                     <p className="text-sm">{msg.content}</p>
-                    {own ? (
-                      <span className="block text-right text-xs text-gray-300">
-                        {formatMessageDate(msg.createdAt)}
-                      </span>
-                    ) : (
-                      <span className="block text-right text-xs text-gray-400">
-                        {formatMessageDate(msg.createdAt)}
-                      </span>
-                    )}
+                    <p
+                      className={`flex items-center justify-end gap-1 text-xs ${
+                        own ? "text-gray-300" : "text-gray-400"
+                      }`}
+                    >
+                      {formatMessageDate(msg.createdAt)}
+                      {own &&
+                        (msg.readAt ? (
+                          <CheckCheckIcon className="size-4 text-emerald-300" />
+                        ) : (
+                          <CheckIcon className="size-4 text-gray-500" />
+                        ))}
+                    </p>
                   </div>
                 </div>
               );
@@ -133,7 +135,7 @@ const ChatWindow = ({ conversationId, onClose }: ChatWindowProps) => {
             />
             <button
               onClick={handleSend}
-              className="rounded-full bg-cyan-500 px-4 py-2 text-white hover:bg-blue-600"
+              className="rounded-full bg-cyan-500 px-4 py-2 text-sm text-white hover:bg-blue-600"
             >
               Send
             </button>
