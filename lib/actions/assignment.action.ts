@@ -163,7 +163,6 @@ export async function getAssignments(
             academicYear: true,
             classSubject: { include: { class: true, subject: true } },
             teacher: { include: { user: true } },
-            grades: true,
           },
         },
         student: { include: { user: true } },
@@ -180,14 +179,6 @@ export async function getAssignments(
             score: Number(assignmentStudent.grade.score),
           }
         : null,
-      assignment: {
-        ...assignmentStudent.assignment,
-        grades: assignmentStudent.assignment.grades.map((grade) => ({
-          ...grade,
-          score: Number(grade.score),
-          maxScore: Number(grade.maxScore),
-        })),
-      },
     }));
 
     const isNext = totalAssignments > skip + plainAssignments.length;

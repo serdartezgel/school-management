@@ -34,6 +34,7 @@ const SelectFilter = ({
   const router = useRouter();
   const searchParams = useSearchParams();
 
+  const defaultValue = filterBy === "type" ? "exam" : "all";
   const [filter, setFilter] = useState("");
 
   useEffect(() => {
@@ -43,6 +44,8 @@ const SelectFilter = ({
       data.some((item) => item.name === decodeURIComponent(urlFilter))
     ) {
       setFilter(decodeURIComponent(urlFilter));
+    } else if (filterBy === "type" && !urlFilter) {
+      setFilter("exam");
     } else {
       setFilter("");
     }
@@ -79,17 +82,19 @@ const SelectFilter = ({
       <Select
         value={filter}
         onValueChange={(val) => setFilter(val)}
-        defaultValue="all"
+        defaultValue={defaultValue}
       >
-        <SelectTrigger className="w-[160px]">
+        <SelectTrigger className="w-[160px] capitalize">
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">
-            All {filterBy === "filterByClass" ? "Classes" : "Subjects"}
-          </SelectItem>
+          {filterBy !== "type" && (
+            <SelectItem value="all">
+              All {filterBy === "filterByClass" ? "Classes" : "Subjects"}
+            </SelectItem>
+          )}
           {data.map((obj) => (
-            <SelectItem key={obj.id} value={obj.name}>
+            <SelectItem key={obj.id} value={obj.name} className="capitalize">
               {obj.name}
             </SelectItem>
           ))}

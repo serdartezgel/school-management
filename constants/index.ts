@@ -57,8 +57,8 @@ export const sidebarLinks = {
     },
     {
       icon: "/images/result.png",
-      label: "Results",
-      href: "/results",
+      label: "Grades",
+      href: "/grades",
       visible: ["ADMIN", "TEACHER", "STUDENT", "PARENT"],
     },
     {

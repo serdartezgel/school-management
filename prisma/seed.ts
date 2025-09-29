@@ -214,7 +214,7 @@ async function main() {
           title: `Assignment ${idx + 1}`,
           description: faker.lorem.sentence(),
           classSubjectId: cs.id,
-          teacherId: teachers[idx % classTeachers.length].id,
+          teacherId: teachers[idx % teachers.length].id,
           dueDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
           academicYearId: academicYear.id,
         },
@@ -222,18 +222,34 @@ async function main() {
     ),
   );
 
-  // ---------- AssignmentStudents ----------
+  // ---------- AssignmentStudents + Grades ----------
   await Promise.all(
     students.flatMap((stu) =>
-      assignments.map((ass) =>
-        prisma.assignmentStudent.create({
+      assignments.map(async (ass, idx) => {
+        // create grade first
+        const grade = await prisma.grade.create({
+          data: {
+            studentId: stu.id,
+            classSubjectId: ass.classSubjectId,
+            teacherId: ass.teacherId,
+            type: GradeType.ASSIGNMENT,
+            title: `Assignment ${idx + 1} Grade`,
+            score: faker.number.int({ min: 50, max: 100 }),
+            maxScore: 100,
+            grade: "A",
+            academicYearId: academicYear.id,
+          },
+        });
+
+        return prisma.assignmentStudent.create({
           data: {
             assignmentId: ass.id,
             studentId: stu.id,
+            gradeId: grade.id,
             status: SubmissionStatus.PENDING,
           },
-        }),
-      ),
+        });
+      }),
     ),
   );
 
@@ -257,23 +273,20 @@ async function main() {
   await Promise.all(
     students.flatMap((stu) =>
       exams.map(async (exam, idx) => {
-        // create grade first
         const grade = await prisma.grade.create({
           data: {
             studentId: stu.id,
-            classSubjectId: classSubjects[idx % classSubjects.length].id,
-            teacherId: teachers[idx % teachers.length].id,
-            type: GradeType.ASSIGNMENT,
-            title: `Quiz ${idx + 1}`,
+            classSubjectId: exam.classSubjectId,
+            teacherId: exam.teacherId,
+            type: GradeType.MIDTERM,
+            title: `Exam ${idx + 1} Grade`,
             score: faker.number.int({ min: 50, max: 100 }),
             maxScore: 100,
             grade: "A",
-            examDate: new Date(),
             academicYearId: academicYear.id,
           },
         });
 
-        // create ExamStudent and link grade
         return prisma.examStudent.create({
           data: {
             examId: exam.id,

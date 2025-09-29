@@ -131,7 +131,6 @@ declare global {
   type ExamDoc = Prisma.ExamGetPayload<{
     include: {
       examStudents: true;
-      grades: true;
     };
   }>;
 
@@ -145,7 +144,6 @@ declare global {
   type AssignmentDoc = Prisma.AssignmentGetPayload<{
     include: {
       assignmentStudents: true;
-      grades: true;
     };
   }>;
 
@@ -153,6 +151,24 @@ declare global {
     include: {
       assignment: true;
       student: { include: { user: true } };
+    };
+  }>;
+
+  type GradeDoc = Prisma.GradeGetPayload<{
+    include: {
+      student: {
+        include: { user: { select: { id: true; name: true; image: true } } };
+      };
+      classSubject: {
+        include: {
+          class: { select: { id: true; name: true } };
+          subject: { select: { id: true; name: true } };
+        };
+      };
+      teacher: { include: { user: { select: { id: true; name: true } } } };
+      examStudent: { include: { exam: true } };
+      assignmentStudent: { include: { assignment: true } };
+      academicYear: { select: { year: true } };
     };
   }>;
 

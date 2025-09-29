@@ -163,7 +163,6 @@ export async function getExams(
             academicYear: true,
             classSubject: { include: { class: true, subject: true } },
             teacher: { include: { user: true } },
-            grades: true,
           },
         },
         student: { include: { user: true } },
@@ -177,14 +176,6 @@ export async function getExams(
       grade: examStudent.grade
         ? { ...examStudent.grade, score: Number(examStudent.grade.score) }
         : null,
-      exam: {
-        ...examStudent.exam,
-        grades: examStudent.exam.grades.map((grade) => ({
-          ...grade,
-          score: Number(grade.score),
-          maxScore: Number(grade.maxScore),
-        })),
-      },
     }));
 
     const isNext = totalExams > skip + plainExams.length;
