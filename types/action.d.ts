@@ -142,6 +142,20 @@ declare global {
     };
   }>;
 
+  type AssignmentDoc = Prisma.AssignmentGetPayload<{
+    include: {
+      assignmentStudents: true;
+      grades: true;
+    };
+  }>;
+
+  type AssignmentStudentDoc = Prisma.AssignmentStudentGetPayload<{
+    include: {
+      assignment: true;
+      student: { include: { user: true } };
+    };
+  }>;
+
   type ConversationDoc = Prisma.ConversationGetPayload<{
     include: { messages: true };
   }>;
