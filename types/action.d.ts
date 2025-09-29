@@ -172,6 +172,15 @@ declare global {
     };
   }>;
 
+  type EventDoc = Prisma.EventGetPayload<{
+    include: {
+      roles: true;
+      classes: true;
+    };
+  }>;
+
+  type EventRoleDoc = Prisma.EventRoleGetPayload;
+
   type ConversationDoc = Prisma.ConversationGetPayload<{
     include: { messages: true };
   }>;

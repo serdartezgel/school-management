@@ -393,6 +393,68 @@ async function main() {
     },
   });
 
+  // ---------- Events ----------
+  const roles: Role[] = ["ADMIN", "TEACHER", "STUDENT", "PARENT"];
+  const events = await Promise.all(
+    Array.from({ length: 10 }).map(async (_, idx) => {
+      return prisma.event.create({
+        data: {
+          title: `Event ${idx + 1}`,
+          description: faker.lorem.sentence(),
+          location: "Gym",
+          startDate: faker.date.soon({ days: 30 }),
+          endDate: faker.date.soon({ days: 31 }),
+          isImportant: faker.datatype.boolean(),
+        },
+      });
+    }),
+  );
+
+  // ---------- EventRoles ----------
+  await Promise.all(
+    events.map(async (event) => {
+      // Assign 1-2 roles randomly
+      const eventRoles = faker.helpers.arrayElements(
+        roles,
+        faker.number.int({ min: 1, max: 2 }),
+      );
+      return Promise.all(
+        eventRoles.map((role) =>
+          prisma.eventRole.create({
+            data: {
+              eventId: event.id,
+              role,
+            },
+          }),
+        ),
+      );
+    }),
+  );
+
+  // ---------- EventClasses ----------
+  await Promise.all(
+    events.map(async (event) => {
+      const assignToClasses = faker.datatype.boolean(); // 50% chance event is class-specific
+      if (!assignToClasses) return;
+
+      // Pick 1-3 random classes
+      const selectedClasses = faker.helpers.arrayElements(
+        classes,
+        faker.number.int({ min: 1, max: 3 }),
+      );
+      return Promise.all(
+        selectedClasses.map((cls) =>
+          prisma.eventClass.create({
+            data: {
+              eventId: event.id,
+              classId: cls.id,
+            },
+          }),
+        ),
+      );
+    }),
+  );
+
   console.log("✅ Full seeding completed!");
 }
 

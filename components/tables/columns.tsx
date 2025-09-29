@@ -1,7 +1,8 @@
 "use client";
 
 import { ColumnDef, CoreRow } from "@tanstack/react-table";
-import { ArrowUpDown, MoreHorizontal } from "lucide-react";
+import { format } from "date-fns";
+import { ArrowUpDown, MoreHorizontal, Star } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { ReadonlyURLSearchParams } from "next/navigation";
@@ -1126,5 +1127,132 @@ export const getGradeColumns = (
       accessorKey: "score",
       header: "Grade",
     },
+  ];
+};
+
+export const getEventColumns = (
+  role: string,
+  searchParams: ReadonlyURLSearchParams,
+  pathname: string,
+): ColumnDef<EventDoc>[] => {
+  const makeSortableHeader = (key: string, label: string) => {
+    const currentSort = searchParams.get("sort") || "asc";
+    const currentSortBy = searchParams.get("sortBy") || "name";
+
+    const newUrl = formUrlQuery({
+      params: searchParams.toString(),
+      key: "sort",
+      value: currentSortBy === key && currentSort === "asc" ? "desc" : "asc",
+      pathname,
+    });
+
+    const urlWithSortBy = formUrlQuery({
+      params: newUrl.split("?")[1],
+      key: "sortBy",
+      value: key,
+      pathname,
+    });
+
+    return (
+      <Link href={urlWithSortBy}>
+        <Button
+          variant={"ghost"}
+          className="w-full cursor-pointer justify-between !pl-0"
+        >
+          {label}
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      </Link>
+    );
+  };
+  return [
+    {
+      accessorKey: "title",
+      header: () => makeSortableHeader("title", "Title"),
+      cell: ({ row }) => (
+        <h3 className="flex items-center gap-2 font-semibold">
+          {row.original.isImportant && (
+            <Star className="h-4 w-4 fill-red-500 text-red-500" />
+          )}
+          {row.original.title}
+        </h3>
+      ),
+    },
+    {
+      accessorKey: "description",
+      header: "Description",
+    },
+    {
+      accessorKey: "location",
+      header: "Location",
+    },
+    {
+      accessorKey: "startDate",
+      header: () => makeSortableHeader("date", "Date"),
+      cell: ({ row }) => {
+        const start = new Date(row.original.startDate);
+        const end = new Date(row.original.endDate);
+
+        return (
+          <div className="flex flex-col gap-1 text-sm">
+            <span>{format(start, "MMM d, yyyy HH:mm")}</span>
+            <span>{format(end, "MMM d, yyyy HH:mm")}</span>
+          </div>
+        );
+      },
+    },
+    ...(role === "ADMIN"
+      ? [
+          {
+            accessorKey: "classes",
+            header: "Classes",
+            cell: ({ row }: ClassDoc) => {
+              const classes = row.original.classes;
+
+              if (!classes || classes.length === 0) {
+                return <span>All Classes</span>;
+              }
+
+              return (
+                <div className="flex flex-wrap gap-1">
+                  {classes.map((cls: ClassDoc) => (
+                    <Link
+                      key={cls.classId}
+                      href={`/classes/${cls.classId}`}
+                      className="hover:underline"
+                    >
+                      {cls.class.name}
+                    </Link>
+                  ))}
+                </div>
+              );
+            },
+          },
+          {
+            accessorKey: "roles",
+            header: "Role",
+            cell: ({ row }: EventRoleDoc) => {
+              const roles = row.original.roles;
+
+              if (!roles || roles.length === 0) {
+                return <span>All Roles</span>;
+              }
+
+              return (
+                <div className="flex flex-wrap gap-1">
+                  {roles.map((r: EventRoleDoc) => (
+                    <span
+                      key={r.role}
+                      className="bg-accent rounded-xl border px-2 py-1 capitalize"
+                    >
+                      {r.role.toLowerCase()}
+                    </span>
+                  ))}
+                </div>
+              );
+            },
+          },
+        ]
+      : []),
   ];
 };

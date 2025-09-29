@@ -1,77 +1,75 @@
 "use client";
 
+import { format } from "date-fns";
+import { Loader } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from "react";
 
 import { Calendar } from "@/components/ui/calendar";
+import { getEventDays, getEvents } from "@/lib/actions/event.action";
 
 import EventCard from "./EventCard";
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 
-const data = [
-  {
-    title: "Math Lecture",
-    description: "Algebra and Geometry topics covered in detail.",
-    startTime: new Date("2025-09-02T09:00:00"),
-    endTime: new Date("2025-09-02T10:30:00"),
-  },
-  {
-    title: "Science Lab",
-    description: "Physics experiments on motion and forces.",
-    startTime: new Date("2025-09-02T11:00:00"),
-    endTime: new Date("2025-09-02T12:30:00"),
-  },
-  {
-    title: "English Literature",
-    description: "Analyzing classic poems and prose.",
-    startTime: new Date("2025-09-02T13:00:00"),
-    endTime: new Date("2025-09-02T14:00:00"),
-  },
-  {
-    title: "History Class",
-    description: "World War II and its global impact.",
-    startTime: new Date("2025-09-03T09:00:00"),
-    endTime: new Date("2025-09-03T10:30:00"),
-  },
-  {
-    title: "Art Workshop",
-    description: "Practical session on sketching and painting.",
-    startTime: new Date("2025-09-03T11:00:00"),
-    endTime: new Date("2025-09-03T12:30:00"),
-  },
-  {
-    title: "Computer Science",
-    description: "Introduction to algorithms and data structures.",
-    startTime: new Date("2025-09-03T13:00:00"),
-    endTime: new Date("2025-09-03T14:30:00"),
-  },
-  {
-    title: "Physical Education",
-    description: "Outdoor sports and fitness activities.",
-    startTime: new Date("2025-09-04T09:00:00"),
-    endTime: new Date("2025-09-04T10:30:00"),
-  },
-  {
-    title: "Chemistry Lecture",
-    description: "Organic chemistry basics and lab safety.",
-    startTime: new Date("2025-09-04T11:00:00"),
-    endTime: new Date("2025-09-04T12:30:00"),
-  },
-  {
-    title: "Music Class",
-    description: "Learning musical instruments and theory.",
-    startTime: new Date("2025-09-04T13:00:00"),
-    endTime: new Date("2025-09-04T14:00:00"),
-  },
-];
-
 const EventsCard = () => {
-  const [date, setDate] = useState<Date | undefined>(new Date());
+  const session = useSession();
 
-  const events = data.filter(
-    (event) =>
-      event.startTime.toLocaleDateString() === date?.toLocaleDateString(),
-  );
+  const [date, setDate] = useState<Date>(new Date());
+  const [month, setMonth] = useState<Date>(new Date());
+  const [events, setEvents] = useState<EventDoc[]>([]);
+  const [eventDays, setEventDays] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const role = session.data?.user.role;
+  const userId =
+    role === "TEACHER"
+      ? session.data?.user.id
+      : role === "STUDENT"
+        ? session.data?.user.id
+        : role === "PARENT"
+          ? session.data?.user.id
+          : undefined;
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      setLoading(true);
+
+      const result = await getEvents({
+        page: 1,
+        pageSize: 100,
+        userId,
+        role,
+        date,
+      });
+
+      if (result.success) {
+        setEvents(result.data?.events ?? []);
+      }
+
+      setLoading(false);
+    };
+
+    fetchEvents();
+  }, [date, role, userId]);
+
+  useEffect(() => {
+    const fetchEventDays = async () => {
+      const result = await getEventDays({
+        month: month.toISOString(),
+        userId,
+        role,
+      });
+
+      if (result.success) {
+        setEventDays(result.data?.days ?? []);
+      }
+    };
+
+    fetchEventDays();
+  }, [month, role, userId]);
+
+  const eventDaysSet = new Set(eventDays);
 
   return (
     <>
@@ -80,10 +78,21 @@ const EventsCard = () => {
         defaultMonth={date}
         selected={date}
         onSelect={setDate}
+        month={month}
+        onMonthChange={setMonth}
         weekStartsOn={1}
         required
         buttonVariant={"outline"}
+        showOutsideDays={false}
+        captionLayout="dropdown"
         className="w-full rounded-t-lg border shadow-sm"
+        modifiers={{
+          hasEvent: (day) => eventDaysSet.has(format(day, "yyyy-MM-dd")),
+        }}
+        modifiersClassNames={{
+          hasEvent:
+            "relative bg-cyan-500/20 dark:bg-cyan-500/20 text-primary font-medium rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary",
+        }}
       />
       <Card className="bg-background rounded-t-none rounded-b-lg p-4">
         <CardHeader className="p-0">
@@ -94,9 +103,11 @@ const EventsCard = () => {
             </Link>
           </CardTitle>
         </CardHeader>
-        <CardContent className="flex flex-col gap-4 px-0">
-          {events.length > 0 ? (
-            events?.map((event) => <EventCard key={event.title} data={event} />)
+        <CardContent className="mx-auto flex flex-col gap-4 px-0">
+          {loading ? (
+            <Loader className="size-6 animate-spin" />
+          ) : events.length > 0 ? (
+            events.map((event) => <EventCard key={event.id} data={event} />)
           ) : (
             <p className="text-sm font-light">
               No planned events for selected day.
