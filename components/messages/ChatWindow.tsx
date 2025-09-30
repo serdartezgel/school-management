@@ -136,8 +136,8 @@ const ChatWindow = ({
                   <div
                     className={`max-w-[60%] rounded-xl px-4 py-2 ${
                       own
-                        ? "bg-cyan-500 text-gray-100"
-                        : "bg-gray-100 text-gray-800"
+                        ? "bg-primary text-white"
+                        : "bg-secondary text-secondary-foreground"
                     }`}
                   >
                     {own ? (
@@ -148,15 +148,15 @@ const ChatWindow = ({
                     <p>{msg.content}</p>
                     <p
                       className={`flex items-center justify-end gap-1 text-xs ${
-                        own ? "text-gray-300" : "text-gray-400"
+                        own ? "text-gray-300" : "text-gray-500"
                       }`}
                     >
                       {formatMessageDate(msg.createdAt)}
                       {own &&
                         (msg.readAt ? (
-                          <CheckCheckIcon className="size-4 text-emerald-300" />
+                          <CheckCheckIcon className="size-4 text-emerald-400" />
                         ) : (
-                          <CheckIcon className="size-4 text-gray-500" />
+                          <CheckIcon className="size-4 text-gray-400" />
                         ))}
                     </p>
                   </div>
@@ -181,7 +181,7 @@ const ChatWindow = ({
                         <Input
                           type="text"
                           placeholder="Type your message..."
-                          className="rounded-full"
+                          className="no-focus rounded-full"
                           {...field}
                         />
                       </FormControl>
@@ -191,7 +191,7 @@ const ChatWindow = ({
                 <Button
                   type="submit"
                   disabled={isSending || !form.watch("content").trim()}
-                  className="rounded-full bg-cyan-600 text-sm text-white hover:bg-cyan-400"
+                  className="rounded-full text-sm"
                 >
                   {isSending ? (
                     <>

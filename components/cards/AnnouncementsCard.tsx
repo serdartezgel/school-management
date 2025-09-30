@@ -38,7 +38,7 @@ const data = [
 
 const AnnouncementsCard = () => {
   return (
-    <Card className="bg-background rounded-md p-4">
+    <Card className="bg-sidebar rounded-md p-4">
       <CardHeader className="p-0">
         <CardTitle className="flex items-center justify-between">
           <span className="text-xl font-semibold">Announcements</span>

@@ -11,25 +11,25 @@ const AdminDashboard = () => {
           <StatCard
             title="Total"
             value={1}
-            color="cyan"
+            color="primary"
             description="Admin(s)"
           />
           <StatCard
             title="Total"
             value={50}
-            color="emerald"
+            color="secondary"
             description="Teacher(s)"
           />
           <StatCard
             title="Total"
             value={400}
-            color="cyan"
+            color="primary"
             description="Student(s)"
           />
           <StatCard
             title="Total"
             value={300}
-            color="emerald"
+            color="secondary"
             description="Parent(s)"
           />
         </div>

@@ -34,24 +34,27 @@ const Theme = () => {
           <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent
+        align="end"
+        className="bg-background text-secondary-foreground dark:text-secondary"
+      >
         <DropdownMenuItem
           onClick={() => setTheme("light")}
-          className={cn(theme === "light" && "bg-accent")}
+          className={cn(theme === "light" && "bg-accent text-secondary")}
         >
           <Sun className="size-4" />
           Light
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("dark")}
-          className={cn(theme === "dark" && "bg-accent")}
+          className={cn(theme === "dark" && "bg-accent text-primary")}
         >
           <Moon className="size-4" />
           Dark
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => setTheme("system")}
-          className={cn(theme === "system" && "bg-accent")}
+          className={cn(theme === "system" && "bg-accent text-primary")}
         >
           <Computer className="size-4" />
           System

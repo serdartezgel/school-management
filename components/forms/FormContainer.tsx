@@ -72,7 +72,7 @@ const FormContainer = ({ table, type, data }: FormContainerProps) => {
     <Dialog>
       <DialogTrigger asChild>
         {type === "create" ? (
-          <Button className="bg-cyan-600 hover:bg-cyan-500">
+          <Button>
             <Image
               src={`/images/${type}.png`}
               alt={`${type} ${table}`}

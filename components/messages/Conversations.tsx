@@ -69,7 +69,7 @@ const Conversations = ({
         <Separator />
 
         {/* Search */}
-        <div className="bg-sidebar m-4 flex max-w-sm items-center rounded-xl border-2 px-4">
+        <div className="m-4 flex max-w-sm items-center rounded-xl border-2 px-4">
           <Input
             type="text"
             placeholder="Search..."
@@ -96,7 +96,7 @@ const Conversations = ({
                 handleSelectConversation(conv.id, conv.otherUser.id)
               }
               className={`hover:bg-accent flex cursor-pointer items-center gap-3 rounded-xl px-4 py-3 ${
-                selectedId === conv.id ? "bg-cyan-500" : ""
+                selectedId === conv.id ? "bg-primary" : ""
               }`}
             >
               <Image
@@ -112,7 +112,7 @@ const Conversations = ({
                     {conv.otherUser.name}
                   </h4>
                   {conv.unreadCount > 0 && (
-                    <span className="text-foreground size-5 rounded-full bg-blue-500 py-0.5 text-center text-xs">
+                    <span className="text-foreground bg-primary size-5 rounded-full py-0.5 text-center text-xs">
                       {conv.unreadCount}
                     </span>
                   )}

@@ -4,7 +4,7 @@ interface StatCardProps {
   title: string;
   value: number;
   description?: string;
-  color?: "green" | "red" | "yellow" | "blue" | "cyan" | "emerald";
+  color?: "green" | "red" | "yellow" | "blue" | "primary" | "secondary";
 }
 
 const StatCard = ({
@@ -18,8 +18,8 @@ const StatCard = ({
     red: "text-red-600",
     yellow: "text-yellow-600",
     blue: "text-blue-600",
-    cyan: "text-cyan-600",
-    emerald: "text-emerald-600",
+    primary: "text-primary",
+    secondary: "text-secondary",
   };
 
   return (

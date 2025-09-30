@@ -166,7 +166,7 @@ const NewMessageModal = () => {
       }}
     >
       <DialogTrigger asChild>
-        <Button className="w-full" variant={"outline"}>
+        <Button className="w-full" variant={"secondary"}>
           + New Message
         </Button>
       </DialogTrigger>
@@ -186,7 +186,7 @@ const NewMessageModal = () => {
               <DropdownMenuTrigger asChild>
                 <Button
                   variant="outline"
-                  className="w-full cursor-pointer justify-start truncate text-gray-500"
+                  className="border-primary w-full cursor-pointer justify-start truncate text-gray-500"
                 >
                   {isFetching
                     ? "Loading..."
@@ -196,7 +196,7 @@ const NewMessageModal = () => {
                 </Button>
               </DropdownMenuTrigger>
 
-              <DropdownMenuContent className="max-h-60 min-w-[300px] overflow-y-auto">
+              <DropdownMenuContent className="bg-background text-foreground max-h-60 min-w-[300px] overflow-y-auto">
                 {topOptions.length > 0 && (
                   <>
                     <DropdownMenuLabel>Quick Select</DropdownMenuLabel>
@@ -267,7 +267,7 @@ const NewMessageModal = () => {
                         variant={"outline"}
                         key={u.id}
                         onClick={() => toggleUser(u.id)}
-                        className="cursor-pointer rounded-full px-2 py-1 text-xs"
+                        className="border-primary cursor-pointer rounded-full px-2 py-1 text-xs"
                       >
                         {u.name}
                       </Button>
@@ -288,7 +288,11 @@ const NewMessageModal = () => {
                 render={({ field }) => (
                   <FormItem className="h-full w-full flex-1">
                     <FormControl>
-                      <Textarea placeholder="Your message *" {...field} />
+                      <Textarea
+                        placeholder="Your message *"
+                        {...field}
+                        className="no-focus"
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -307,7 +311,7 @@ const NewMessageModal = () => {
                     !form.watch("content").trim() ||
                     selectedUsers.length === 0
                   }
-                  className="w-full bg-cyan-600 text-white hover:bg-cyan-400 md:w-20"
+                  className="w-full md:w-20"
                 >
                   {isSending ? (
                     <>

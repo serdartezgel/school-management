@@ -69,7 +69,7 @@ const AuthForm = <T extends FieldValues>({
                 <FormControl>
                   <Input
                     type={field.name === "password" ? "password" : "text"}
-                    className="bg-background no-focus min-h-12 rounded-md border border-cyan-700 text-gray-600 dark:text-gray-300"
+                    className="no-focus min-h-12 rounded-md border"
                     {...field}
                   />
                 </FormControl>
@@ -81,7 +81,7 @@ const AuthForm = <T extends FieldValues>({
         <Button
           disabled={form.formState.isSubmitting}
           type="submit"
-          className="cursor-pointer bg-cyan-700 text-cyan-50 hover:bg-cyan-600"
+          className="cursor-pointer"
         >
           {form.formState.isSubmitting ? "Signing In" : "Sign In"}
         </Button>

@@ -38,7 +38,7 @@ const Navbar = async () => {
       <div className="flex items-center justify-end gap-4 md:gap-6">
         <Link
           href="/messages"
-          className="bg-background dark:bg-input/30 relative flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
+          className="bg-background dark:bg-input/30 border-primary relative flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image
             src="/images/message.png"
@@ -48,14 +48,14 @@ const Navbar = async () => {
             className="object-contain dark:invert-100"
           />
           {unreadCount > 0 && (
-            <span className="text-foreground absolute -top-1 -right-1 size-4 rounded-full bg-blue-500 text-center text-[10px]">
+            <span className="text-foreground bg-primary absolute -top-1 -right-1 size-4 rounded-full text-center text-[10px]">
               {unreadCount}
             </span>
           )}
         </Link>
         <Link
           href="/announcements"
-          className="bg-background dark:bg-input/30 flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
+          className="bg-background dark:bg-input/30 border-primary flex h-9 w-9 items-center justify-center rounded-full border max-lg:hidden"
         >
           <Image
             src="/images/announcement.png"

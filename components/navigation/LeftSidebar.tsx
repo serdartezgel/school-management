@@ -52,7 +52,6 @@ const LeftSidebar = ({ role, ...props }: LeftSidebarProps) => {
             alt="School Logo"
             width={40}
             height={40}
-            quality={100}
           />
 
           <span className="font-bold">SilverOak Academy</span>

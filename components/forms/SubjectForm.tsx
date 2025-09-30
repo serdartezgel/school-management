@@ -190,7 +190,7 @@ const SubjectForm = ({
           <Button
             type="submit"
             disabled={isPending}
-            className="rounded-md bg-cyan-600 text-white hover:bg-cyan-500 max-md:w-full"
+            className="rounded-md max-md:w-full"
           >
             {isPending ? (
               <>

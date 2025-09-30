@@ -85,16 +85,16 @@ const EventsCard = () => {
         buttonVariant={"outline"}
         showOutsideDays={false}
         captionLayout="dropdown"
-        className="w-full rounded-t-lg border shadow-sm"
+        className="bg-sidebar w-full rounded-t-lg border border-b-0 shadow-sm"
         modifiers={{
           hasEvent: (day) => eventDaysSet.has(format(day, "yyyy-MM-dd")),
         }}
         modifiersClassNames={{
           hasEvent:
-            "relative bg-cyan-500/20 dark:bg-cyan-500/20 text-primary font-medium rounded-md after:content-[''] after:absolute after:bottom-1 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-primary",
+            "relative bg-primary/20 dark:bg-secondary/20 text-primary dark:text-secondary font-medium rounded-md after:content-[''] after:absolute after:bottom-2 after:left-1/2 after:-translate-x-1/2 after:w-1.5 after:h-1.5 after:rounded-full after:bg-secondary",
         }}
       />
-      <Card className="bg-background rounded-t-none rounded-b-lg p-4">
+      <Card className="bg-sidebar rounded-t-none rounded-b-lg p-4">
         <CardHeader className="p-0">
           <CardTitle className="flex items-center justify-between">
             <span className="text-xl font-semibold">Events</span>

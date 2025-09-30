@@ -77,7 +77,7 @@ const GradeChart = () => {
               <Line
                 dataKey="count"
                 type="natural"
-                stroke="var(--color-blue-400)"
+                stroke="var(--color-secondary)"
                 strokeWidth={3}
                 dot={false}
               />
