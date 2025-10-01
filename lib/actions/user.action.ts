@@ -134,3 +134,30 @@ export async function getAllUsersByRole(params: {
     return handleError(error) as ErrorResponse;
   }
 }
+
+export async function getUserRoleCounts(): Promise<
+  ActionResponse<{
+    admin: number;
+    teacher: number;
+    student: number;
+    parent: number;
+  }>
+> {
+  const prisma = await dbConnect();
+
+  try {
+    const [admin, teacher, student, parent] = await Promise.all([
+      prisma.user.count({ where: { role: "ADMIN" } }),
+      prisma.user.count({ where: { role: "TEACHER" } }),
+      prisma.user.count({ where: { role: "STUDENT" } }),
+      prisma.user.count({ where: { role: "PARENT" } }),
+    ]);
+
+    return {
+      success: true,
+      data: { admin, teacher, student, parent },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}

@@ -1,42 +1,34 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
+
+import { auth } from "@/auth";
+import { getAnnouncements } from "@/lib/actions/announcement.action";
 
 import AnnouncementCard from "./AnnouncementCard";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-const data = [
-  {
-    title: "Parent-Teacher Meeting",
-    date: new Date("2025-09-05"),
-    description:
-      "A parent-teacher meeting will be held to discuss student progress and upcoming activities.",
-  },
-  {
-    title: "Sports Day",
-    date: new Date("2025-09-12"),
-    description:
-      "Annual Sports Day will include track events, team games, and fun activities for all grades.",
-  },
-  {
-    title: "Exam Schedule Released",
-    date: new Date("2025-09-20"),
-    description:
-      "The mid-term exam schedule has been published. Students are advised to check the notice board.",
-  },
-  {
-    title: "Science Fair",
-    date: new Date("2025-09-28"),
-    description:
-      "Students are encouraged to participate in the annual Science Fair to showcase their projects.",
-  },
-  {
-    title: "Holiday Notice",
-    date: new Date("2025-10-02"),
-    description:
-      "School will remain closed on October 2nd in observance of Gandhi Jayanti.",
-  },
-];
+const AnnouncementsCard = async () => {
+  const session = await auth();
+  if (!session) redirect("/sign-in");
 
-const AnnouncementsCard = () => {
+  const role = session.user.role;
+
+  const userId =
+    role === "TEACHER"
+      ? session.user.id
+      : role === "STUDENT"
+        ? session.user.id
+        : role === "PARENT"
+          ? session.user.id
+          : undefined;
+
+  const result = await getAnnouncements({
+    sortBy: "date",
+    sort: "desc",
+    userId,
+    role,
+  });
+
   return (
     <Card className="bg-sidebar rounded-md p-4">
       <CardHeader className="p-0">
@@ -48,8 +40,8 @@ const AnnouncementsCard = () => {
         </CardTitle>
       </CardHeader>
       <CardContent className="flex flex-col gap-4 px-0">
-        {data.map((item) => (
-          <AnnouncementCard key={item.title} data={item} />
+        {result.data?.announcements.map((item) => (
+          <AnnouncementCard key={item.id} data={item} />
         ))}
       </CardContent>
     </Card>

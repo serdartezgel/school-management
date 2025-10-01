@@ -121,7 +121,7 @@ export async function getEvents(
   } else if (sortBy === "date") {
     orderBy = [{ isImportant: "desc" }, { startDate: sort }];
   } else {
-    orderBy = [{ isImportant: "desc" }, { title: sort }];
+    orderBy = [{ isImportant: "desc" }, { title: "asc" }];
   }
 
   try {

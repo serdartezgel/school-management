@@ -18,8 +18,6 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-const chartData = [{ boys: 260, girls: 240 }];
-
 const chartConfig = {
   boys: {
     label: "Boys",
@@ -31,8 +29,8 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const CountChartContainer = () => {
-  const totalStudents = chartData[0].boys + chartData[0].girls;
+const CountChartContainer = ({ chartData }: { chartData: StudentCounts }) => {
+  const { total = 0, male = 0, female = 0 } = chartData;
 
   return (
     <div className="bg-background h-full w-full rounded-xl max-xl:min-w-[250px]">
@@ -55,7 +53,7 @@ const CountChartContainer = () => {
             className="mx-auto aspect-square w-full max-w-[250px]"
           >
             <RadialBarChart
-              data={chartData}
+              data={[chartData]}
               endAngle={180}
               innerRadius={70}
               outerRadius={120}
@@ -75,7 +73,7 @@ const CountChartContainer = () => {
                             y={(viewBox.cy || 0) - 16}
                             className="fill-foreground text-2xl font-bold"
                           >
-                            {totalStudents.toLocaleString()}
+                            {total.toLocaleString()}
                           </tspan>
                           <tspan
                             x={viewBox.cx}
@@ -91,14 +89,14 @@ const CountChartContainer = () => {
                 />
               </PolarRadiusAxis>
               <RadialBar
-                dataKey="girls"
+                dataKey="female"
                 fill="var(--color-fuchsia-500)"
                 stackId="a"
                 cornerRadius={5}
                 className="stroke-transparent stroke-2"
               />
               <RadialBar
-                dataKey="boys"
+                dataKey="male"
                 stackId="a"
                 cornerRadius={5}
                 fill="var(--color-cyan-400)"
@@ -110,26 +108,17 @@ const CountChartContainer = () => {
         <CardFooter className="flex justify-center gap-6 text-sm">
           <div className="flex flex-col items-center gap-1">
             <div className="h-5 w-5 rounded-full bg-cyan-400" />
-            <span className="font-bold">{chartData[0].boys}</span>
+            <span className="font-bold">{male}</span>
             <span className="text-xs text-gray-400">
-              Boys (
-              {Math.round(
-                (chartData[0].boys / (chartData[0].boys + chartData[0].girls)) *
-                  100,
-              )}
+              Boys ({Math.round((male / (male + female)) * 100)}
               %)
             </span>
           </div>
           <div className="flex flex-col items-center gap-1">
             <div className="h-5 w-5 rounded-full bg-fuchsia-500" />
-            <span className="font-bold">{chartData[0].girls}</span>
+            <span className="font-bold">{female}</span>
             <span className="text-xs text-gray-400">
-              Girls (
-              {Math.round(
-                (chartData[0].girls /
-                  (chartData[0].girls + chartData[0].boys)) *
-                  100,
-              )}
+              Girls ({Math.round((female / (female + male)) * 100)}
               %)
             </span>
           </div>

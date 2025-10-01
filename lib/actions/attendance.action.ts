@@ -1,5 +1,6 @@
 "use server";
 
+import { addDays, endOfWeek, startOfWeek } from "date-fns";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 
@@ -347,6 +348,85 @@ export async function updateAttendanceStatus(
         } satisfies ErrorResponse;
       }
     }
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getWeeklyAttendance(): Promise<
+  ActionResponse<
+    {
+      day: string; // e.g. Monday
+      present: number;
+      absent: number;
+      late: number;
+      excused: number;
+      total: number;
+    }[]
+  >
+> {
+  const prisma = await dbConnect();
+
+  try {
+    const baseDate = new Date();
+    const weekStart = startOfWeek(baseDate, { weekStartsOn: 1 }); // Monday
+    const weekEnd = endOfWeek(baseDate, { weekStartsOn: 1 });
+
+    // fetch all attendances in the week
+    const attendances = await prisma.attendance.findMany({
+      where: {
+        date: {
+          gte: weekStart,
+          lte: weekEnd,
+        },
+      },
+      select: {
+        date: true,
+        status: true,
+      },
+    });
+
+    // build results per day (Mon–Fri or Mon–Sun depending on your calendar)
+    const results: {
+      day: string;
+      present: number;
+      absent: number;
+      late: number;
+      excused: number;
+      total: number;
+    }[] = [];
+
+    for (let i = 0; i < 7; i++) {
+      const current = addDays(weekStart, i);
+      const dayAttendances = attendances.filter(
+        (a) => a.date.toDateString() === current.toDateString(),
+      );
+
+      const numbers = {
+        present: 0,
+        absent: 0,
+        late: 0,
+        excused: 0,
+        total: dayAttendances.length,
+      };
+
+      dayAttendances.forEach((a) => {
+        if (a.status === "PRESENT") numbers.present++;
+        if (a.status === "ABSENT") numbers.absent++;
+        if (a.status === "LATE") numbers.late++;
+        if (a.status === "EXCUSED") numbers.excused++;
+      });
+
+      results.push({
+        day: current.toLocaleDateString("en-US", { weekday: "long" }),
+        ...numbers,
+      });
+    }
+
+    return {
+      success: true,
+      data: results,
+    };
+  } catch (error) {
     return handleError(error) as ErrorResponse;
   }
 }

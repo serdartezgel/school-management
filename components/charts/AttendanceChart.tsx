@@ -20,14 +20,6 @@ import {
 } from "@/components/ui/chart";
 import { getCurrentWeekRange } from "@/lib/utils";
 
-const chartData = [
-  { day: "Monday", present: 244, absent: 256 },
-  { day: "Tuesday", present: 251, absent: 249 },
-  { day: "Wednesday", present: 230, absent: 270 },
-  { day: "Thursday", present: 255, absent: 245 },
-  { day: "Friday", present: 252, absent: 248 },
-];
-
 const chartConfig = {
   present: {
     label: "Present",
@@ -39,7 +31,18 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-const AttendanceChart = () => {
+const AttendanceChart = ({
+  chartData,
+}: {
+  chartData: {
+    day: string;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+    total: number;
+  }[];
+}) => {
   return (
     <div className="bg-background h-full w-full rounded-lg">
       <Card className="flex h-full flex-col">

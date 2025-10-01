@@ -14,6 +14,18 @@ declare global {
     ids: string[];
   }
 
+  interface StudentCounts {
+    total: number;
+    male: number;
+    female: number;
+  }
+
+  interface WeeklyAttendanceDay {
+    day: string;
+    present: number;
+    absent: number;
+  }
+
   type UserDoc = Prisma.UserGetPayload<{
     select: {
       id: true;
@@ -180,6 +192,15 @@ declare global {
   }>;
 
   type EventRoleDoc = Prisma.EventRoleGetPayload;
+
+  type AnnouncementDoc = Prisma.AnnouncementGetPayload<{
+    include: {
+      roles: true;
+      classes: true;
+    };
+  }>;
+
+  type AnnouncementRoleDoc = Prisma.AnnouncementRoleGetPayload;
 
   type ConversationDoc = Prisma.ConversationGetPayload<{
     include: { messages: true };

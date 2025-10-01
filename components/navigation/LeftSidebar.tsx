@@ -133,8 +133,8 @@ const LeftSidebar = ({ role, ...props }: LeftSidebarProps) => {
                 <SidebarMenuButton asChild>
                   <Button
                     onClick={handleLogout}
-                    variant={"ghost"}
-                    className="flex cursor-pointer items-center justify-start gap-3 font-medium"
+                    variant={"link"}
+                    className="text-foreground flex cursor-pointer items-center justify-start gap-3 font-medium"
                   >
                     <Image
                       src="/images/logout.png"

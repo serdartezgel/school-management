@@ -30,9 +30,7 @@ const StatCard = ({
       <CardContent>
         <p className={`text-2xl font-bold ${colorClasses[color]}`}>{value}</p>
         {description && (
-          <p className="text-muted-foreground text-sm capitalize">
-            {description}
-          </p>
+          <p className="text-muted-foreground text-sm">{description}</p>
         )}
       </CardContent>
     </Card>

@@ -455,6 +455,86 @@ async function main() {
     }),
   );
 
+  // ---------- Announcements ----------
+  const announcements = await Promise.all(
+    Array.from({ length: 10 }).map(async (_, idx) => {
+      const type = faker.helpers.arrayElement([
+        "expired",
+        "active",
+        "scheduled",
+      ]);
+
+      let publishDate: Date;
+      let expiryDate: Date | null;
+
+      if (type === "expired") {
+        publishDate = faker.date.recent({ days: 60 }); // published in the past
+        expiryDate = faker.date.recent({ days: 15 }); // already expired
+      } else if (type === "active") {
+        publishDate = faker.date.recent({ days: 30 }); // published recently
+        expiryDate = faker.date.soon({ days: 15 }); // still valid
+      } else {
+        publishDate = faker.date.soon({ days: 15 }); // scheduled for the future
+        expiryDate = faker.date.soon({ days: 30 }); // expires after publish
+      }
+
+      return prisma.announcement.create({
+        data: {
+          title: `Announcement ${idx + 1}`,
+          content: faker.lorem.sentences(2),
+          publishDate,
+          expiryDate,
+          isImportant: faker.datatype.boolean(),
+        },
+      });
+    }),
+  );
+
+  // ---------- AnnouncementRoles ----------
+  await Promise.all(
+    announcements.map(async (announcement) => {
+      // Assign 1-2 roles randomly
+      const announcementRoles = faker.helpers.arrayElements(
+        roles,
+        faker.number.int({ min: 1, max: 2 }),
+      );
+      return Promise.all(
+        announcementRoles.map((role) =>
+          prisma.announcementRole.create({
+            data: {
+              announcementId: announcement.id,
+              role,
+            },
+          }),
+        ),
+      );
+    }),
+  );
+
+  // ---------- AnnouncementClasses ----------
+  await Promise.all(
+    announcements.map(async (announcement) => {
+      const assignToClasses = faker.datatype.boolean();
+      if (!assignToClasses) return;
+
+      // Pick 1-3 random classes
+      const selectedClasses = faker.helpers.arrayElements(
+        classes,
+        faker.number.int({ min: 1, max: 3 }),
+      );
+      return Promise.all(
+        selectedClasses.map((cls) =>
+          prisma.announcementClass.create({
+            data: {
+              announcementId: announcement.id,
+              classId: cls.id,
+            },
+          }),
+        ),
+      );
+    }),
+  );
+
   console.log("✅ Full seeding completed!");
 }
 

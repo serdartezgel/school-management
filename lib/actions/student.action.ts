@@ -326,3 +326,24 @@ export async function getStudentsById(params: GetStudentsByIdParams): Promise<
     return handleError(error) as ErrorResponse;
   }
 }
+
+export async function getStudentCounts(): Promise<
+  ActionResponse<StudentCounts>
+> {
+  const prisma = await dbConnect();
+
+  try {
+    const [total, male, female] = await Promise.all([
+      prisma.user.count({ where: { role: "STUDENT" } }),
+      prisma.user.count({ where: { role: "STUDENT", gender: "MALE" } }),
+      prisma.user.count({ where: { role: "STUDENT", gender: "FEMALE" } }),
+    ]);
+
+    return {
+      success: true,
+      data: { total, male, female },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
