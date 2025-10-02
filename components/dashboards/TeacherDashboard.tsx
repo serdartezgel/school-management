@@ -1,35 +1,23 @@
+import { auth } from "@/auth";
+import { getTeacherPendingGrades } from "@/lib/actions/grade.action";
+
 import PendingTasksCard from "../cards/PendingTasksCard";
 import Timetable from "../timetables/Timetable";
 import { Separator } from "../ui/separator";
 
-const tasks = [
-  {
-    id: "1",
-    title: "Math Homework 5",
-    type: "assignment",
-    dueDate: "2025-09-21",
-    className: "Grade 5A",
-    subject: "Math",
-    graded: false,
-  },
-  {
-    id: "2",
-    title: "Science Exam",
-    type: "exam",
-    dueDate: "2025-09-22",
-    className: "Grade 5A",
-    subject: "Science",
-    graded: false,
-  },
-];
+const TeacherDashboard = async () => {
+  const session = await auth();
+  const userId = session?.user.id || "";
 
-const TeacherDashboard = () => {
+  const result = await getTeacherPendingGrades({ userId });
+  const tasks = result.data || [];
+
+  console.log(tasks);
+
   const academicYear = {
     startDate: new Date("2025-09-01"),
     endDate: new Date("2026-06-30"),
   };
-
-  const filteredTasks = tasks.filter((task) => !task.graded);
 
   return (
     <>
@@ -44,7 +32,7 @@ const TeacherDashboard = () => {
       </section>
 
       <section className="flex flex-col gap-4 xl:flex-row">
-        <PendingTasksCard tasks={filteredTasks} />
+        <PendingTasksCard tasks={tasks} />
       </section>
     </>
   );

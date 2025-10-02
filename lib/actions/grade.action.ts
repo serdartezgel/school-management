@@ -6,7 +6,11 @@ import { GradeType, Prisma, Role } from "@/prisma/client";
 import action from "../handlers/action";
 import handleError from "../handlers/error";
 import dbConnect from "../prisma";
-import { PaginatedSearchParamsSchema } from "../validations";
+import {
+  GetGradesChartDataSchema,
+  GetTeacherPendingGradesSchema,
+  PaginatedSearchParamsSchema,
+} from "../validations";
 
 export async function getGrades(
   params: PaginatedSearchParams & {
@@ -203,9 +207,18 @@ export async function getGrades(
 export async function getGradesChartData(params: {
   type: GradeType[];
 }): Promise<ActionResponse<{ grade: string; count: number }[]>> {
+  const validationResult = await action({
+    params,
+    schema: GetGradesChartDataSchema,
+  });
+
   const prisma = await dbConnect();
 
-  const { type } = params;
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { type } = validationResult.params!;
 
   try {
     const grades = await prisma.grade.findMany({
@@ -242,6 +255,115 @@ export async function getGradesChartData(params: {
     });
 
     return { success: true, data };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getTeacherPendingGrades(params: {
+  userId: string;
+}): Promise<ActionResponse<TeacherTasks[]>> {
+  const validationResult = await action({
+    params,
+    schema: GetTeacherPendingGradesSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = validationResult.params!;
+
+  try {
+    // Fetch assignments and exams that are not yet graded
+    const assignments = await prisma.assignmentStudent.findMany({
+      where: {
+        assignment: { teacher: { userId } },
+        grade: null, // non-graded
+      },
+      include: {
+        assignment: {
+          select: {
+            id: true,
+            title: true,
+            dueDate: true,
+            classSubject: {
+              include: {
+                class: { select: { name: true } },
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exams = await prisma.examStudent.findMany({
+      where: {
+        exam: { teacher: { userId } },
+        grade: null, // non-graded
+      },
+      include: {
+        exam: {
+          select: {
+            id: true,
+            title: true,
+            examDate: true,
+            classSubject: {
+              include: {
+                class: { select: { name: true } },
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Map assignments to unified format
+    let assignmentTasks = assignments.map((a) => ({
+      id: a.assignment.id,
+      title: a.assignment.title,
+      type: "assignment",
+      date: a.assignment.dueDate,
+      className: a.assignment.classSubject.class.name,
+      subject: a.assignment.classSubject.subject.name,
+      graded: false,
+    }));
+
+    // Remove duplicate assignments by id
+    const seenAssignments = new Set<string>();
+    assignmentTasks = assignmentTasks.filter((task) => {
+      if (seenAssignments.has(task.id)) return false;
+      seenAssignments.add(task.id);
+      return true;
+    });
+
+    // Map exams to unified format
+    let examTasks = exams.map((e) => ({
+      id: e.exam.id,
+      title: e.exam.title,
+      type: "exam",
+      date: e.exam.examDate,
+      className: e.exam.classSubject.class.name,
+      subject: e.exam.classSubject.subject.name,
+      graded: false,
+    }));
+
+    // Remove duplicate exams by id
+    const seenExams = new Set<string>();
+    examTasks = examTasks.filter((task) => {
+      if (seenExams.has(task.id)) return false;
+      seenExams.add(task.id);
+      return true;
+    });
+
+    // Combine assignments and exams
+    const tasks = [...assignmentTasks, ...examTasks];
+
+    return { success: true, data: tasks };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

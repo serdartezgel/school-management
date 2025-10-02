@@ -1,6 +1,6 @@
 import { Prisma } from "@prisma/client";
 
-import { Role } from "@/prisma/client";
+import { AttendanceStatus, Role, SubmissionStatus } from "@/prisma/client";
 
 declare global {
   interface AuthCredentials {
@@ -213,4 +213,31 @@ declare global {
       };
     };
   }>;
+
+  type TeacherTasks = {
+    type: string;
+    id: string;
+    title: string;
+    date: Date;
+    className: string;
+    subject: string;
+    graded: boolean;
+  };
+
+  type StudentTasks = {
+    id: string;
+    title: string;
+    type: "exam" | "assignment";
+    date: Date;
+    className: string;
+    subject: string;
+    status?: SubmissionStatus;
+  };
+
+  type StudentAttendance = {
+    id: string;
+    date: Date;
+    status: AttendanceStatus;
+    subject: string;
+  };
 }

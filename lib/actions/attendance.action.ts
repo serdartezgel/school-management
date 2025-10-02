@@ -13,6 +13,7 @@ import dbConnect from "../prisma";
 import {
   AttendanceSchema,
   GetAttendanceNumbersSchema,
+  GetStudentAttendancesSchema,
   PaginatedSearchParamsSchema,
 } from "../validations";
 
@@ -432,6 +433,49 @@ export async function getWeeklyAttendance(): Promise<
       success: true,
       data: results,
     };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getStudentAttendances(params: {
+  userId: string;
+  academicYearId: string;
+}): Promise<ActionResponse<StudentAttendance[]>> {
+  const validationResult = await action({
+    params,
+    schema: GetStudentAttendancesSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId, academicYearId } = validationResult.params!;
+
+  try {
+    const attendance = await prisma.attendance.findMany({
+      where: {
+        student: { userId },
+        academicYearId,
+        status: { in: ["ABSENT", "LATE", "EXCUSED"] },
+      },
+      orderBy: { date: "asc" },
+      include: {
+        classSubject: { include: { subject: { select: { name: true } } } },
+      },
+    });
+
+    const mapped: StudentAttendance[] = attendance.map((record) => ({
+      id: record.id,
+      date: record.date,
+      status: record.status,
+      subject: record.classSubject.subject.name ?? "N/A",
+    }));
+
+    return { success: true, data: mapped };
   } catch (error) {
     return handleError(error) as ErrorResponse;
   }

@@ -1,5 +1,7 @@
 "use client";
 
+import { AcademicYear } from "@/prisma/client";
+
 import DailyTimetable from "./DailyTimetable";
 import WeeklyTimetable from "./WeeklyTimetable";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
@@ -7,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 interface TimetableProps {
   dailyEntries: TimetableEntry[];
   weeklyEntries: TimetableEntry[];
-  academicYear: { startDate: Date; endDate: Date };
+  academicYear: AcademicYear;
 }
 
 const Timetable = ({
@@ -22,8 +24,12 @@ const Timetable = ({
         className="flex h-full w-full items-start justify-start gap-3"
       >
         <TabsList className="w-full">
-          <TabsTrigger value="daily">Daily</TabsTrigger>
-          <TabsTrigger value="weekly">Weekly</TabsTrigger>
+          <TabsTrigger value="daily" className="border-primary">
+            Daily
+          </TabsTrigger>
+          <TabsTrigger value="weekly" className="border-primary">
+            Weekly
+          </TabsTrigger>
         </TabsList>
         <TabsContent value="daily" className="h-full w-full min-w-md">
           <DailyTimetable

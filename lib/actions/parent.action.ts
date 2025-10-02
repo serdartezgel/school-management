@@ -10,6 +10,7 @@ import handleError from "../handlers/error";
 import { UnauthorizedError } from "../http-errors";
 import dbConnect from "../prisma";
 import {
+  GetChildrenSchema,
   PaginatedSearchParamsSchema,
   ParentSchema,
   UpdateParentSchema,
@@ -273,6 +274,36 @@ export async function updateParent(
         } satisfies ErrorResponse;
       }
     }
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getChildren(params: {
+  userId: string;
+}): Promise<ActionResponse<StudentDoc[]>> {
+  const validationResult = await action({
+    params,
+    schema: GetChildrenSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = validationResult.params!;
+
+  try {
+    const children = await prisma.student.findMany({
+      where: { parent: { userId } },
+      include: {
+        user: { select: { id: true, name: true } },
+      },
+    });
+
+    return { success: true, data: children };
+  } catch (error) {
     return handleError(error) as ErrorResponse;
   }
 }

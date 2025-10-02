@@ -225,3 +225,24 @@ export const SendMessageSchema = z.object({
   content: z.string().min(1, "Content is required."),
   conversationId: z.string().optional(),
 });
+
+export const GetGradesChartDataSchema = z.object({
+  type: z.array(z.enum(["ASSIGNMENT", "QUIZ", "MIDTERM", "FINAL", "PROJECT"])),
+});
+
+export const GetTeacherPendingGradesSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+});
+
+export const GetStudentPendingTasksSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+});
+
+export const GetStudentAttendancesSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+  academicYearId: z.string().min(1, "Academic Year ID is required."),
+});
+
+export const GetChildrenSchema = z.object({
+  userId: z.string().min(1, "User ID is required."),
+});

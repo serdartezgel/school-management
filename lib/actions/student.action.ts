@@ -10,6 +10,7 @@ import handleError from "../handlers/error";
 import { UnauthorizedError } from "../http-errors";
 import dbConnect from "../prisma";
 import {
+  GetStudentPendingTasksSchema,
   GetStudentsByIdSchema,
   PaginatedSearchParamsSchema,
   StudentSchema,
@@ -342,6 +343,107 @@ export async function getStudentCounts(): Promise<
     return {
       success: true,
       data: { total, male, female },
+    };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}
+
+export async function getStudentPendingTasks(params: {
+  userId: string;
+}): Promise<ActionResponse<StudentTasks[]>> {
+  const validationResult = await action({
+    params,
+    schema: GetStudentPendingTasksSchema,
+  });
+
+  const prisma = await dbConnect();
+
+  if (validationResult instanceof Error) {
+    return handleError(validationResult) as ErrorResponse;
+  }
+
+  const { userId } = validationResult.params!;
+
+  try {
+    const now = new Date();
+
+    const assignments = await prisma.assignmentStudent.findMany({
+      where: {
+        student: { userId },
+        status: "PENDING",
+      },
+      orderBy: [
+        { assignment: { dueDate: "asc" } },
+        { assignment: { title: "asc" } },
+      ],
+      include: {
+        assignment: {
+          include: {
+            classSubject: {
+              include: {
+                class: { select: { name: true } },
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const exams = await prisma.examStudent.findMany({
+      where: {
+        student: { userId },
+        exam: {
+          examDate: { gte: now },
+        },
+      },
+      orderBy: [{ exam: { examDate: "asc" } }, { exam: { title: "asc" } }],
+      include: {
+        exam: {
+          include: {
+            classSubject: {
+              include: {
+                class: { select: { name: true } },
+                subject: { select: { name: true } },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Normalize into common shape
+    const tasks = [
+      ...assignments.map((a) => ({
+        id: a.assignment.id,
+        title: a.assignment.title,
+        type: "assignment" as const,
+        date: a.assignment.dueDate,
+        className: a.assignment.classSubject.class.name,
+        subject: a.assignment.classSubject.subject.name,
+        status: a.status,
+      })),
+      ...exams.map((e) => ({
+        id: e.exam.id,
+        title: e.exam.title,
+        type: "exam" as const,
+        date: e.exam.examDate,
+        className: e.exam.classSubject.class.name,
+        subject: e.exam.classSubject.subject.name,
+      })),
+    ];
+
+    const seen = new Set<string>();
+    const uniqueTasks = tasks.filter((task) => {
+      if (seen.has(`${task.type}-${task.id}`)) return false;
+      seen.add(`${task.type}-${task.id}`);
+      return true;
+    });
+
+    return {
+      success: true,
+      data: uniqueTasks,
     };
   } catch (error) {
     return handleError(error) as ErrorResponse;

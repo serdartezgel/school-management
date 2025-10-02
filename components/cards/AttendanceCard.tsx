@@ -2,34 +2,18 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 
-interface Attendance {
-  id: string;
-  date: string;
-  status: string;
-  subject?: string;
-}
-
-interface AttendanceCardProps {
-  records: Attendance[];
-}
-
-const AttendanceCard = ({ records = [] }: AttendanceCardProps) => {
-  // todo Filter out PRESENT on server
-  const nonPresentRecords = records.filter(
-    (record) => record.status !== "PRESENT",
-  );
-
+const AttendanceCard = ({ records }: { records: StudentAttendance[] }) => {
   return (
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Attendance</CardTitle>
       </CardHeader>
       <CardContent>
-        {nonPresentRecords.length === 0 ? (
+        {records.length === 0 ? (
           <p className="text-muted-foreground">No missed classes 🎉</p>
         ) : (
           <ul className="flex flex-col gap-2">
-            {nonPresentRecords.map((record) => (
+            {records.map((record) => (
               <li
                 key={record.id}
                 className="hover:bg-muted flex justify-between rounded-md border px-4 py-2"

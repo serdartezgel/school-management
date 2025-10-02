@@ -1,23 +1,15 @@
 "use client";
 
+import Link from "next/link";
+
 import { Card, CardHeader, CardTitle, CardContent } from "../ui/card";
 import { Separator } from "../ui/separator";
 
-interface Task {
-  id: string;
-  title: string;
-  type: string; // "exam" | "assignment"
-  dueDate: string;
-  className?: string;
-  subject?: string;
-  graded: boolean;
-}
-
-interface PendingTasksCardProps {
-  tasks?: Task[];
-}
-
-const PendingTasksCard = ({ tasks = [] }: PendingTasksCardProps) => {
+const PendingTasksCard = ({
+  tasks = [],
+}: {
+  tasks: TeacherTasks[] | StudentTasks[];
+}) => {
   return (
     <Card className="w-full">
       <CardHeader>
@@ -34,7 +26,14 @@ const PendingTasksCard = ({ tasks = [] }: PendingTasksCardProps) => {
                 className="hover:bg-muted flex justify-between rounded-md border px-4 py-2"
               >
                 <div>
-                  <p className="font-medium">{task.title}</p>
+                  <Link
+                    href={
+                      task.type === "assignment" ? "/assignments" : "/exams"
+                    }
+                    className="font-medium"
+                  >
+                    {task.title}
+                  </Link>
                   <p className="text-muted-foreground text-sm">
                     {task.type === "assignment" ? "Assignment" : "Exam"}{" "}
                     {task.subject ? `- ${task.subject}` : ""}{" "}
@@ -42,8 +41,8 @@ const PendingTasksCard = ({ tasks = [] }: PendingTasksCardProps) => {
                   </p>
                 </div>
                 <div className="text-muted-foreground text-sm">
-                  {task.dueDate
-                    ? new Date(task.dueDate).toLocaleDateString(undefined, {
+                  {task.date
+                    ? new Date(task.date).toLocaleDateString(undefined, {
                         month: "short",
                         day: "numeric",
                       })
