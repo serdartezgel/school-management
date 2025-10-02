@@ -1,10 +1,10 @@
 "use server";
 
-import { addDays, endOfWeek, startOfWeek } from "date-fns";
+import { addDays, startOfWeek } from "date-fns";
 import { revalidatePath } from "next/cache";
 import z from "zod";
 
-import { Prisma, Role } from "@/prisma/client";
+import { DayOfWeek, Prisma, Role } from "@/prisma/client";
 
 import action from "../handlers/action";
 import handleError from "../handlers/error";
@@ -355,7 +355,7 @@ export async function updateAttendanceStatus(
 export async function getWeeklyAttendance(): Promise<
   ActionResponse<
     {
-      day: string; // e.g. Monday
+      day: DayOfWeek;
       present: number;
       absent: number;
       late: number;
@@ -366,12 +366,19 @@ export async function getWeeklyAttendance(): Promise<
 > {
   const prisma = await dbConnect();
 
+  const weekdays: DayOfWeek[] = [
+    "MONDAY",
+    "TUESDAY",
+    "WEDNESDAY",
+    "THURSDAY",
+    "FRIDAY",
+  ];
+
   try {
     const baseDate = new Date();
-    const weekStart = startOfWeek(baseDate, { weekStartsOn: 1 }); // Monday
-    const weekEnd = endOfWeek(baseDate, { weekStartsOn: 1 });
+    const weekStart = startOfWeek(baseDate, { weekStartsOn: 1 });
+    const weekEnd = addDays(weekStart, 4);
 
-    // fetch all attendances in the week
     const attendances = await prisma.attendance.findMany({
       where: {
         date: {
@@ -385,9 +392,8 @@ export async function getWeeklyAttendance(): Promise<
       },
     });
 
-    // build results per day (Mon–Fri or Mon–Sun depending on your calendar)
     const results: {
-      day: string;
+      day: DayOfWeek;
       present: number;
       absent: number;
       late: number;
@@ -395,7 +401,7 @@ export async function getWeeklyAttendance(): Promise<
       total: number;
     }[] = [];
 
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < 5; i++) {
       const current = addDays(weekStart, i);
       const dayAttendances = attendances.filter(
         (a) => a.date.toDateString() === current.toDateString(),
@@ -417,7 +423,7 @@ export async function getWeeklyAttendance(): Promise<
       });
 
       results.push({
-        day: current.toLocaleDateString("en-US", { weekday: "long" }),
+        day: weekdays[i],
         ...numbers,
       });
     }

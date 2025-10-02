@@ -9,7 +9,12 @@ import dbConnect from "../prisma";
 import { PaginatedSearchParamsSchema } from "../validations";
 
 export async function getAnnouncements(
-  params: PaginatedSearchParams & { userId?: string; role?: Role },
+  params: PaginatedSearchParams & {
+    userId?: string;
+    role?: Role;
+    skip?: number;
+    take?: number;
+  },
 ): Promise<
   ActionResponse<{
     announcements: AnnouncementDoc[];
@@ -40,10 +45,12 @@ export async function getAnnouncements(
     filterByClass,
     userId,
     role,
+    skip: skipParam,
+    take: takeParam,
   } = validationResult.params!;
 
-  const skip = (Number(page) - 1) * Number(pageSize);
-  const take = Number(pageSize);
+  const skip = skipParam ?? (Number(page) - 1) * Number(pageSize);
+  const take = takeParam ?? Number(pageSize);
 
   // Start building where conditions
   const filterConditions: Prisma.AnnouncementWhereInput[] = [];

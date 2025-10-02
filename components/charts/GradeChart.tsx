@@ -1,6 +1,9 @@
 "use client";
 
+import { Loader } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
 import { CartesianGrid, Line, LineChart, XAxis } from "recharts";
 
 import {
@@ -16,16 +19,16 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
+import { getGradesChartData } from "@/lib/actions/grade.action";
+import { GradeType } from "@/prisma/client";
 
-const chartData = [
-  { grade: "0", count: 0 },
-  { grade: "0-44", count: 30 },
-  { grade: "45-54", count: 80 },
-  { grade: "55-69", count: 210 },
-  { grade: "70-84", count: 130 },
-  { grade: "85-100", count: 50 },
-  { grade: "100", count: 0 },
-];
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../ui/select";
 
 const chartConfig = {
   count: {
@@ -35,53 +38,105 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 const GradeChart = () => {
+  const [selectedGradeType, setSelectedGradeType] = useState<GradeType>(
+    GradeType.MIDTERM,
+  );
+  const [chartData, setChartData] = useState<
+    { grade: string; count: number }[]
+  >([]);
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => {
+    startTransition(async () => {
+      try {
+        const result = await getGradesChartData({
+          type: [selectedGradeType],
+        });
+
+        if (result.success) {
+          setChartData(result.data || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch grades chart data", error);
+      }
+    });
+  }, [selectedGradeType]);
+
   return (
     <div className="bg-background h-full w-full rounded-xl p-4">
       <Card className="flex h-full flex-col">
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="text-lg font-semibold">Grades</span>
-            <Image
-              src="/images/moreDark.png"
-              alt="More"
-              width={20}
-              height={20}
-            />
+            <Link href="/grades">
+              <Image
+                src="/images/moreDark.png"
+                alt="More"
+                width={20}
+                height={20}
+              />
+            </Link>
           </CardTitle>
-          <CardDescription>Midterms</CardDescription>
+          <CardDescription>
+            <Select
+              value={selectedGradeType}
+              onValueChange={(value) =>
+                setSelectedGradeType(value as GradeType)
+              }
+            >
+              <SelectTrigger className="no-focus">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {Object.values(GradeType).map((type) => (
+                  <SelectItem key={type} value={type}>
+                    {type}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <ChartContainer
             config={chartConfig}
             className="mx-auto max-w-[600px]"
           >
-            <LineChart
-              accessibilityLayer
-              data={chartData}
-              margin={{
-                left: 12,
-                right: 12,
-              }}
-            >
-              <CartesianGrid vertical={false} />
-              <XAxis
-                dataKey="grade"
-                tickLine={false}
-                axisLine={false}
-                tickMargin={8}
-              />
-              <ChartTooltip
-                cursor={false}
-                content={<ChartTooltipContent hideLabel />}
-              />
-              <Line
-                dataKey="count"
-                type="natural"
-                stroke="var(--color-secondary)"
-                strokeWidth={3}
-                dot={false}
-              />
-            </LineChart>
+            {isPending ? (
+              <Loader className="size-6 w-full animate-spin" />
+            ) : (
+              <LineChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  left: 10,
+                  right: 10,
+                  top: 8,
+                }}
+              >
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="grade"
+                  type="category"
+                  tickLine={false}
+                  axisLine={false}
+                  interval={0}
+                  tickMargin={8}
+                  padding={{ left: 10, right: 10 }}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel />}
+                />
+                <Line
+                  dataKey="count"
+                  type="monotone"
+                  stroke="var(--color-secondary)"
+                  strokeWidth={3}
+                  dot={false}
+                />
+              </LineChart>
+            )}
           </ChartContainer>
         </CardContent>
       </Card>

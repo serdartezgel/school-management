@@ -199,3 +199,50 @@ export async function getGrades(
     return handleError(error) as ErrorResponse;
   }
 }
+
+export async function getGradesChartData(params: {
+  type: GradeType[];
+}): Promise<ActionResponse<{ grade: string; count: number }[]>> {
+  const prisma = await dbConnect();
+
+  const { type } = params;
+
+  try {
+    const grades = await prisma.grade.findMany({
+      where: {
+        type: { in: type },
+      },
+      select: {
+        score: true,
+        maxScore: true,
+        type: true,
+      },
+    });
+
+    const ranges = [
+      { label: "0-44", min: 0, max: 44 },
+      { label: "45-54", min: 45, max: 54 },
+      { label: "55-69", min: 55, max: 69 },
+      { label: "70-84", min: 70, max: 84 },
+      { label: "85-100", min: 85, max: 100 },
+    ];
+
+    // Count students per range
+    const data = ranges.map((range) => {
+      const count = grades.filter(
+        (g) =>
+          g.score !== null &&
+          g.maxScore !== null &&
+          // Convert score to percentage
+          (Number(g.score) / Number(g.maxScore)) * 100 >= range.min &&
+          (Number(g.score) / Number(g.maxScore)) * 100 <= range.max,
+      ).length;
+
+      return { grade: range.label, count };
+    });
+
+    return { success: true, data };
+  } catch (error) {
+    return handleError(error) as ErrorResponse;
+  }
+}

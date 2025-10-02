@@ -8,11 +8,11 @@ import CountChart from "../charts/CountChart";
 import GradeChart from "../charts/GradeChart";
 
 const AdminDashboard = async () => {
-  const result = await getUserRoleCounts();
-  const studentData = await getStudentCounts();
-  const attendanceData = await getWeeklyAttendance();
-
-  console.log(attendanceData);
+  const [result, studentData, attendanceData] = await Promise.all([
+    getUserRoleCounts(),
+    getStudentCounts(),
+    getWeeklyAttendance(),
+  ]);
 
   return (
     <>

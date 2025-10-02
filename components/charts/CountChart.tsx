@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { Label, PolarRadiusAxis, RadialBar, RadialBarChart } from "recharts";
 
 import {
@@ -38,12 +39,14 @@ const CountChartContainer = ({ chartData }: { chartData: StudentCounts }) => {
         <CardHeader>
           <CardTitle className="flex items-center justify-between">
             <span className="text-lg font-semibold">Students</span>
-            <Image
-              src="/images/moreDark.png"
-              alt="More"
-              width={20}
-              height={20}
-            />
+            <Link href="/students">
+              <Image
+                src="/images/moreDark.png"
+                alt="More"
+                width={20}
+                height={20}
+              />
+            </Link>
           </CardTitle>
           <CardDescription>2025-2026 Academic Year</CardDescription>
         </CardHeader>

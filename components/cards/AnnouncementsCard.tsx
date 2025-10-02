@@ -27,6 +27,8 @@ const AnnouncementsCard = async () => {
     sort: "desc",
     userId,
     role,
+    skip: 0,
+    take: 3,
   });
 
   return (
